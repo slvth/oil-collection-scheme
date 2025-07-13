@@ -1,0 +1,22 @@
+@OilCollectionScheme.API_HostAddress = http://localhost:5059
+
+GET {{OilCollectionScheme.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+
+GET {{OilCollectionScheme.API_HostAddress}}/schemes/
+Accept: application/json
+
+###
+
+PUT {{OilCollectionScheme.API_HostAddress}}/schemes/4
+Accept: application/json
+Content-Type: application/json
+{
+  "name": "j",
+  "department_id":1,
+  "user_id": 1
+}
+
+###

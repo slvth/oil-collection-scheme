@@ -1,0 +1,54 @@
+using Microsoft.EntityFrameworkCore;
+using OilCollectionScheme.Application.Services;
+using OilCollectionScheme.Core.Abstracts.Repositories;
+using OilCollectionScheme.Core.Abstracts.Services;
+using OilCollectionScheme.DataAccess;
+using OilCollectionScheme.DataAccess.Repositories;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<DbOilCollectionContext>(
+    options => 
+    {
+        options.UseNpgsql(builder.Configuration.GetConnectionString(nameof(OilCollectionSchemeDbContext)));
+    }
+);
+
+//Services
+builder.Services.AddScoped<IEmployeesService, EmployeesService>();
+builder.Services.AddScoped<ISchemesService, SchemesService>();
+builder.Services.AddScoped<IWellsService, WellsService>();
+builder.Services.AddScoped<IMeteringStationsService, MeteringStationsService>();
+builder.Services.AddScoped<IPumpingStationsService, PumpingStationsService>();
+builder.Services.AddScoped<IStorageTanksService, StorageTanksService>();
+
+//Repositories
+builder.Services.AddScoped<IEmployeesRepository, EmployeesRepository>();
+builder.Services.AddScoped<ISchemesRepository, SchemesRepository>();
+builder.Services.AddScoped<IWellsRepository, WellsRepository>();
+builder.Services.AddScoped<IMeteringStationsRepository, MeteringStationsRepository>();
+builder.Services.AddScoped<IPumpingStationsRepository, PumpingStationsRepository>();
+builder.Services.AddScoped<IStorageTanksRepository, StorageTanksRepository>();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
