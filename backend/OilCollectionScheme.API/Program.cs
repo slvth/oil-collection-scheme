@@ -36,6 +36,16 @@ builder.Services.AddScoped<IMeteringStationsRepository, MeteringStationsReposito
 builder.Services.AddScoped<IPumpingStationsRepository, PumpingStationsRepository>();
 builder.Services.AddScoped<IStorageTanksRepository, StorageTanksRepository>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(["http://localhost:3000"]);
+        policy.AllowAnyHeader();
+        policy.AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -49,6 +59,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+app.UseCors();
 app.MapControllers();
 
 app.Run();
