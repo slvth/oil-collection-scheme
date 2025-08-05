@@ -19,9 +19,9 @@ namespace OilCollectionScheme.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<Dictionary<string, List<StorageTanksResponse>>>> getAllStorageTanksBySchemeId(int schemeId)
+        public async Task<ActionResult<Dictionary<string, List<StorageTanksResponse>>>> getAllStorageTanksBySchemeId(int scheme_id)
         {
-            var storageTanks = await _storageTanksService.GetAllStorageTanksBySchemeId(schemeId);
+            var storageTanks = await _storageTanksService.GetAllStorageTanksBySchemeId(scheme_id);
             var response = storageTanks.Select(pt =>
                 new StorageTanksResponse(
                     pt.StorageTankId,

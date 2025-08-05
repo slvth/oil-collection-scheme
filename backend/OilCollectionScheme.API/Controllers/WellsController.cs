@@ -24,7 +24,7 @@ namespace OilCollectionScheme.API.Controllers
             var wells = await _wellService.GetAllWellsBySchemeId(scheme_id);
             var response = wells.Select(w => 
                 new WellsResponse(
-                    w.SchemeId, 
+                    w.WellId, 
                     w.Name, 
                     w.WellTypeId, 
                     w.WellPumpId, 

@@ -5,7 +5,7 @@ import {
   getSchemeBySchemeId,
   Scheme,
   updateScheme,
-} from "../services/Scheme";
+} from "../../../services/Scheme";
 import { set } from "ol/transform";
 
 export enum FormMode {

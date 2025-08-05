@@ -9,7 +9,18 @@ namespace OilCollectionScheme.Core.Models
 {
     public class Pipe
     {
-        public Pipe(int pipeId, string name, int startObjectId, int startObjectTypeId, int endObjectId, int endObjectTypeId, GeoLineString? coordinates, int schemeId)
+
+        public Pipe(string name, int startObjectId, int startObjectTypeId, int endObjectId, int endObjectTypeId, GeoPoint[]? coordinates, int schemeId)
+        {
+            Name = name;
+            StartObjectId = startObjectId;
+            StartObjectTypeId = startObjectTypeId;
+            EndObjectId = endObjectId;
+            EndObjectTypeId = endObjectTypeId;
+            Coordinates = coordinates;
+            SchemeId = schemeId;
+        }
+        public Pipe(int pipeId, string name, int startObjectId, int startObjectTypeId, int endObjectId, int endObjectTypeId, GeoPoint[]? coordinates, int schemeId)
         {
             PipeId = pipeId;
             Name = name;
@@ -33,7 +44,7 @@ namespace OilCollectionScheme.Core.Models
 
         public int EndObjectTypeId { get; }
 
-        public GeoLineString? Coordinates { get; }
+        public GeoPoint[]? Coordinates { get; }
 
         public int SchemeId { get; }
 

@@ -1,4 +1,5 @@
-﻿using NetTopologySuite.Geometries;
+﻿using NetTopologySuite;
+using NetTopologySuite.Geometries;
 using OilCollectionScheme.Core.Models.ValueObjects;
 using System;
 using System.Collections.Generic;
@@ -29,5 +30,32 @@ namespace OilCollectionScheme.DataAccess.Utils
             var ntsPoint = new Point(coordinate);
             return ntsPoint;
         }
+
+        public static GeoPoint[]? toGeoLineString(LineString? ntsLineString)
+        {
+            if (ntsLineString == null)
+            {
+                return null;
+            }
+            var geoPoints = ntsLineString.Coordinates
+                .Select((coordinate) => GeoPoint.Create(coordinate.Y, coordinate.X))
+                .ToArray();
+            //var geoLineString = GeoLineString.Create(geoPoints);
+            return geoPoints;
+        }
+        public static LineString? toNtsLineString(GeoPoint[]? geoLineString)
+        {
+            if (geoLineString == null)
+            {
+                return null;
+            }
+            var coordinates = geoLineString.Select((point)=>new Coordinate(point.Latitude, point.Longitude)).ToArray();
+            Console.WriteLine(coordinates);
+            var ntsLineString = new LineString(coordinates);
+            var ff = ntsLineString;
+            Console.WriteLine(ntsLineString);
+            return ntsLineString;
+        }
+
     }
 }

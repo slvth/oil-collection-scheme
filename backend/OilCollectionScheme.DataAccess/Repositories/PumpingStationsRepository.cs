@@ -59,7 +59,7 @@ namespace OilCollectionScheme.DataAccess.Repositories
             await _context.PumpingStations
                 .Where(pt => pt.PumpingStationId == pumpingStation.PumpingStationId)
                 .ExecuteUpdateAsync(s => s
-                    .SetProperty(pt=>pt.Name, pumpingStation.Name)
+                    .SetProperty(pt => pt.Name, pumpingStation.Name)
                     .SetProperty(pt => pt.Coordinate, coordinate)
                     .SetProperty(pt => pt.SchemeId, pumpingStation.SchemeId)
                 );

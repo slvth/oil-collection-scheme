@@ -16,9 +16,9 @@ namespace OilCollectionScheme.Core.Models.ValueObjects
             Latitude = latitude;
         }
 
-        public double Longitude { get; } //X
+        public double Longitude { get; } //Y
 
-        public double Latitude { get; } //Y
+        public double Latitude { get; } //X
 
         public static GeoPoint Create(double longitude, double latitude) { 
             return new GeoPoint(longitude, latitude);

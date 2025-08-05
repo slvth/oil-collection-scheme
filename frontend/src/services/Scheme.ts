@@ -1,5 +1,8 @@
 import axios from "axios";
+
 const baseUrl = "http://localhost:5059";
+
+const api = axios.create({ baseURL: baseUrl });
 
 export interface Scheme {
   scheme_id?: number;
@@ -44,7 +47,7 @@ export interface StorageTank {
 
 export const getSchemes = async () => {
   try {
-    const response = await axios.get(`${baseUrl}/schemes`);
+    const response = await api.get(`/schemes`);
     return response.data.schemes;
   } catch (e) {
     console.error(e);
@@ -56,7 +59,7 @@ export const getSchemeBySchemeId = async ({
 }: {
   scheme_id: number;
 }) => {
-  const response = await axios.get(`${baseUrl}/schemes/${scheme_id}`);
+  const response = await api.get(`/schemes/${scheme_id}`);
   return response.data;
 };
 
@@ -65,7 +68,7 @@ export const createScheme = async ({
 }: {
   scheme: Omit<Scheme, "scheme_id">;
 }) => {
-  const response = await axios.post(`${baseUrl}/schemes/`, scheme);
+  const response = await api.post(`${baseUrl}/schemes/`, scheme);
   return response.data;
 };
 
@@ -76,23 +79,23 @@ export const updateScheme = async ({
   scheme_id: number;
   scheme: Scheme;
 }) => {
-  const response = await axios.put(`${baseUrl}/schemes/${scheme_id}`, scheme);
+  const response = await api.put(`${baseUrl}/schemes/${scheme_id}`, scheme);
   return response.data;
 };
 
 export const deleteScheme = async ({ scheme_id }: { scheme_id: number }) => {
-  const response = await axios.delete(`${baseUrl}/schemes/${scheme_id}`);
+  const response = await api.delete(`${baseUrl}/schemes/${scheme_id}`);
   return response.data;
 };
 
 //Скважина
 export const getWells = async ({ scheme_id }: { scheme_id: number }) => {
-  const response = await axios.get(`${baseUrl}/wells?scheme_id=` + scheme_id);
+  const response = await api.get(`${baseUrl}/wells?scheme_id=` + scheme_id);
   return response.data.wells;
 };
 
 export const createWell = async ({ well }: { well: Omit<Well, "well_id"> }) => {
-  const response = await axios.post(`${baseUrl}/wells/`, well);
+  const response = await api.post(`${baseUrl}/wells/`, well);
   return response.data;
 };
 
@@ -102,7 +105,7 @@ export const getMeteringStations = async ({
 }: {
   scheme_id: number;
 }) => {
-  const response = await axios.get(
+  const response = await api.get(
     `${baseUrl}/MeteringStations?scheme_id=` + scheme_id
   );
   return response.data.metering_stations;
@@ -113,7 +116,7 @@ export const createMeteringStation = async ({
 }: {
   meteringStation: Omit<MeteringStation, "metering_station_id">;
 }) => {
-  const response = await axios.post(
+  const response = await api.post(
     `${baseUrl}/MeteringStations/`,
     meteringStation
   );
@@ -126,7 +129,7 @@ export const getPumpingStations = async ({
 }: {
   scheme_id: number;
 }) => {
-  const response = await axios.get(
+  const response = await api.get(
     `${baseUrl}/PumpingStations?scheme_id=` + scheme_id
   );
   return response.data.pumping_stations;
@@ -137,7 +140,7 @@ export const createPumpingStation = async ({
 }: {
   pumpingStation: Omit<MeteringStation, "metering_station_id">;
 }) => {
-  const response = await axios.post(
+  const response = await api.post(
     `${baseUrl}/PumpingStations/`,
     pumpingStation
   );
@@ -146,7 +149,7 @@ export const createPumpingStation = async ({
 
 //РВС
 export const getStorageTanks = async ({ scheme_id }: { scheme_id: number }) => {
-  const response = await axios.get(
+  const response = await api.get(
     `${baseUrl}/StorageTanks?scheme_id=` + scheme_id
   );
   return response.data.storage_tanks;
@@ -157,6 +160,6 @@ export const createStorageTank = async ({
 }: {
   storageTank: Omit<StorageTank, "storage_tank_id">;
 }) => {
-  const response = await axios.post(`${baseUrl}/StorageTanks/`, storageTank);
+  const response = await api.post(`${baseUrl}/StorageTanks/`, storageTank);
   return response.data;
 };

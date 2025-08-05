@@ -12,7 +12,7 @@ namespace OilCollectionScheme.Core.Models.ValueObjects
         {
             Points = points;
         }
-        public GeoPoint[] Points { get; set; }
+        public GeoPoint[] Points { get; }
 
         public static GeoLineString Create(GeoPoint[] points)
         {
