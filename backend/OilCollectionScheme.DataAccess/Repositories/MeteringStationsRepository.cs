@@ -60,6 +60,7 @@ namespace OilCollectionScheme.DataAccess.Repositories
         {
             var ntsPoint = CoordinateMapper.toNtsPoint(meteringStation.Coordinate);
             await _context.MeteringStations
+                .Where(ms => ms.MeteringStationId == meteringStation.MeteringStationId)
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(mt => mt.Name, meteringStation.Name)
                     .SetProperty(mt => mt.CounterTypeId, meteringStation.CounterTypeId)
@@ -90,6 +91,19 @@ namespace OilCollectionScheme.DataAccess.Repositories
             ).ToList();
             return types;
         }
-       
+
+        public async Task<List<CounterType>> GetCounterTypes()
+        {
+            var typeEntities = await _context.CounterTypes
+                .AsNoTracking()
+                .ToListAsync();
+            var types = typeEntities.Select(t =>
+                new CounterType(
+                    t.CounterTypeId,
+                    t.Name
+                )
+            ).ToList();
+            return types;
+        }
     }
 }

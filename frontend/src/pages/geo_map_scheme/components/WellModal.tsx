@@ -1,4 +1,12 @@
-import { Button, Modal, Select, Space, Tabs, TabsProps } from "antd";
+import {
+  Button,
+  Modal,
+  Select,
+  Space,
+  Tabs,
+  TabsProps,
+  Typography,
+} from "antd";
 import { createWell, getWells, Well } from "../../../services/Scheme";
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import { DrawEvent } from "ol/interaction/Draw";
@@ -6,6 +14,17 @@ import { Vector as VectorSource } from "ol/source";
 import { Point } from "ol/geom";
 import { transform } from "ol/proj";
 import { Map } from "ol";
+import { useAppDispatch, useAppSelector } from "../../../hooks/redux";
+import {
+  UpdateWell,
+  GetWells,
+  GetWellPumps,
+  GetWellTypes,
+} from "../../../store/reducers/SchemeSlice";
+import { IWell } from "../../../models/IWell";
+import { CreateWellForm } from "./CreateWellForm";
+import { wellIcon } from "../../../assets";
+import { useForm } from "antd/es/form/Form";
 
 export enum FormMode {
   create,
@@ -23,7 +42,7 @@ interface WellFormProp {
   mapInstance: Map;
 }
 
-export default function WellForm({
+export default function WellModal({
   open,
   setOpen,
   pendingFeature,
@@ -31,27 +50,41 @@ export default function WellForm({
   wellSource,
   mapInstance,
 }: WellFormProp) {
-  const [selectedWellId, setSelectedWellId] = useState(NaN);
+  const [formCreate] = useForm();
+  console.log("Render WellForm");
+  const { wells, selectedSchemeId } = useAppSelector((state) => state.scheme);
+  const [selectedWellId, setSelectedWellId] = useState<number | null>(null);
   const [wellOptions, setWellOptions] = useState<
-    { value: number | undefined; label: string | undefined }[]
+    { value: number; label: string }[]
   >([]);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    async function fetchWellData() {
-      const wells: Well[] = await getWells({ scheme_id: 1 });
-      console.log(wells);
-      const wellOptions = wells.map((well) => ({
-        value: well.well_id,
-        label: well.name,
-      }));
-      console.log(wellOptions);
-      setWellOptions(wellOptions);
+    if (!wells) {
+      return;
     }
-    fetchWellData();
+    const filteredWells: IWell[] = wells.filter(
+      (well) => !well.latitude && !well.longitude
+    );
+    const wellOptions = filteredWells.map((well) => ({
+      value: well.well_id!,
+      label: well.name,
+    }));
+    setWellOptions(wellOptions);
     return () => {
+      setSelectedWellId(null);
       setWellOptions([]);
     };
-  }, []);
+  }, [wells]);
+
+  const onCancel = () => {
+    setOpen(false);
+    if (pendingFeature) {
+      wellSource.removeFeature(pendingFeature.feature);
+    }
+    setPendingFeature(null);
+    formCreate.resetFields();
+  };
 
   const items: TabsProps["items"] = useMemo(() => {
     return [
@@ -61,6 +94,7 @@ export default function WellForm({
         children: (
           <>
             <AddWellDrawForm
+              selectedSchemeId={selectedSchemeId}
               wellOptions={wellOptions}
               selectedWellId={selectedWellId}
               setSelectedWellId={setSelectedWellId}
@@ -76,25 +110,55 @@ export default function WellForm({
       {
         key: "2",
         label: "Создание",
-        children: "Content of Tab Pane 2",
+        children: (
+          <>
+            <CreateWellForm
+              setOpen={setOpen}
+              form={formCreate}
+              onCancel={onCancel}
+            />
+          </>
+        ),
       },
     ];
   }, [selectedWellId, wellOptions, pendingFeature, wellSource, mapInstance]);
 
-  const onChange = (key: string) => {
-    console.log(key);
+  const onChange = async (key: string) => {
+    if (key === "2") {
+      dispatch(GetWellPumps());
+      dispatch(GetWellTypes());
+    }
   };
 
   return (
     <>
-      <Modal open={open} footer={null} onCancel={() => setOpen(false)}>
-        <Tabs defaultActiveKey="1" items={items} onChange={onChange} />
+      <Modal
+        title={
+          <>
+            <Space>
+              <img src={wellIcon} alt="Скважина" width="30px" />
+              <Typography>Скважина</Typography>
+            </Space>
+          </>
+        }
+        open={open}
+        footer={null}
+        onCancel={onCancel}
+      >
+        <Tabs
+          centered
+          tabPosition="left"
+          defaultActiveKey="1"
+          items={items}
+          onChange={onChange}
+        />
       </Modal>
     </>
   );
 }
 
 function AddWellDrawForm({
+  selectedSchemeId,
   wellOptions,
   selectedWellId,
   setSelectedWellId,
@@ -104,17 +168,21 @@ function AddWellDrawForm({
   wellSource,
   mapInstance,
 }: {
-  wellOptions: { value: number | undefined; label: string | undefined }[];
-  selectedWellId: number;
-  setSelectedWellId: Dispatch<SetStateAction<number>>;
+  selectedSchemeId: number | null;
+  wellOptions: { value: number; label: string }[];
+  selectedWellId: number | null;
+  setSelectedWellId: Dispatch<SetStateAction<number | null>>;
   setOpen: Dispatch<SetStateAction<boolean>>;
   pendingFeature: DrawEvent | null;
   setPendingFeature: Dispatch<SetStateAction<DrawEvent | null>>;
   wellSource: VectorSource;
   mapInstance: Map;
 }) {
-  async function OnAddWell() {
-    if (pendingFeature && mapInstance) {
+  const dispatch = useAppDispatch();
+  console.log("Render AddWellDrawForm");
+
+  const OnAddWell = async () => {
+    if (pendingFeature && mapInstance && selectedWellId) {
       const geometry = pendingFeature.feature.getGeometry();
       const point = geometry as Point;
       const coordinates = point.getCoordinates();
@@ -123,23 +191,29 @@ function AddWellDrawForm({
         mapInstance.getView().getProjection(),
         "EPSG:4326"
       );
-      var well: Well = {
-        name: "efsefs",
-        well_pump_id: 1,
-        scheme_id: 1,
-        latitude: wgs84Coords[0],
-        longitude: wgs84Coords[1],
-      };
-      await createWell({ well: well });
+      const latitude = wgs84Coords[0];
+      const longitude = wgs84Coords[1];
+
+      dispatch(UpdateWell({ well_id: selectedWellId, latitude, longitude }));
+      pendingFeature.feature.setProperties({
+        name: wellOptions.find((option) => option.value === selectedWellId)
+          ?.label,
+      });
+
       setOpen(false);
+      setSelectedWellId(null);
     }
-  }
+  };
 
   return (
     <>
       <Select
+        showSearch
+        placeholder="Выберите скважину"
+        optionFilterProp="label"
         style={{ width: "100%" }}
         options={wellOptions}
+        value={selectedWellId}
         onChange={(value) => setSelectedWellId(value)}
       />
       <Space

@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Feature, Map, View } from "ol";
+import { useEffect, useState } from "react";
 import "ol/ol.css";
 import "./MapScheme.css";
 
@@ -35,69 +34,48 @@ import { useMapInit } from "./hooks/useMapInit";
 import { useDraw } from "./hooks/useDraw";
 import { useInteractions } from "./hooks/useInteractions";
 import { useSchemeData } from "./hooks/useSchemeData";
-import WellForm from "./components/WellForm";
+import WellModal from "./components/WellModal";
 import { DrawEvent } from "ol/interaction/Draw";
+import { useAppDispatch, useAppSelector } from "../../hooks/redux";
+import { schemeSlice } from "../../store/reducers/SchemeSlice";
+import { MeteringStationModal } from "./components/MeteringStationModal";
+import { PumpingStationModal } from "./components/PumpingStationModal";
+import { StorageTankModal } from "./components/StorageTankModal";
 
 export default function MapScheme() {
-  const [selectedSchemeId, setSelectedSchemeId] = useState(NaN);
-  const [selectedWellId, setSelectedWellId] = useState(NaN);
+  const { map, wellSource, selectedSchemeId } = useAppSelector(
+    (state) => state.scheme
+  );
+  const dispatch = useAppDispatch();
+  //const [selectedSchemeId, setSelectedSchemeId] = useState(NaN);
   const [wellFormOpen, setWellFormOpen] = useState(false);
+  const [openMeteringStationForm, setOpenMeteringStationForm] = useState(false);
+  const [openPumpingStationForm, setOpenPumpingStationForm] = useState(false);
+  const [openStorageTankForm, setOpenStorageTankForm] = useState(false);
   const [pendingFeature, setPendingFeature] = useState<DrawEvent | null>(null);
 
-  const {
-    mapInstance,
-    wellSource,
-    gzuSource,
-    dnsSource,
-    productParkSource,
-    pipeSource,
-    selectInteraction,
-  } = useMapInit();
+  //const { selectInteraction } = useMapInit();
+  useMapInit();
+
+  //useInteractions({ selectInteraction });
+  const { selectInteraction } = useInteractions();
 
   const { wellDraw, gzuDraw, dnsDraw, productParkDraw, pipeDraw } = useDraw({
-    mapInstance,
-    wellSource,
-    gzuSource,
-    dnsSource,
-    productParkSource,
-    pipeSource,
-    selectedSchemeId,
-    wellFormOpen,
     setWellFormOpen,
+    setOpenMeteringStationForm,
+    setOpenPumpingStationForm,
+    setOpenStorageTankForm,
     setPendingFeature,
-  });
-
-  useInteractions({
-    mapInstance,
-    wellSource,
-    gzuSource,
-    dnsSource,
-    productParkSource,
     selectInteraction,
   });
 
-  useSchemeData({
-    mapInstance,
-    wellSource,
-    gzuSource,
-    dnsSource,
-    productParkSource,
-    pipeSource,
-    selectedSchemeId,
-  });
+  useSchemeData({ selectedSchemeId });
 
   return (
     <>
       <Row style={{ height: "100%" }}>
         <Col span={24}>
-          <div
-            id="map"
-            style={{
-              height: "100%",
-              width: "100%",
-              position: "absolute",
-            }}
-          ></div>
+          <div id="map" />
           <div
             style={{
               width: "100%",
@@ -108,11 +86,7 @@ export default function MapScheme() {
             }}
           >
             <div style={{ width: "250px" }}>
-              <MainPanel
-                selectedSchemeId={selectedSchemeId}
-                setSelectedSchemeId={setSelectedSchemeId}
-                wellSource={wellSource.current}
-              />
+              <MainPanel wellSource={wellSource} />
             </div>
           </div>
 
@@ -130,18 +104,31 @@ export default function MapScheme() {
           <MainPanel
             selectedSchemeId={selectedSchemeId}
             setSelectedSchemeId={setSelectedSchemeId}
-            wellSource={wellSource.current}
+            wellSource={wellSource}
           />
         </Col>
           */}
 
-        <WellForm
+        <WellModal
           open={wellFormOpen}
           setOpen={setWellFormOpen}
           pendingFeature={pendingFeature}
           setPendingFeature={setPendingFeature}
-          wellSource={wellSource.current}
-          mapInstance={mapInstance.current}
+          wellSource={wellSource}
+          mapInstance={map}
+        />
+
+        <MeteringStationModal
+          open={openMeteringStationForm}
+          setOpen={setOpenMeteringStationForm}
+        />
+        <PumpingStationModal
+          open={openPumpingStationForm}
+          setOpen={setOpenPumpingStationForm}
+        />
+        <StorageTankModal
+          open={openStorageTankForm}
+          setOpen={setOpenStorageTankForm}
         />
       </Row>
     </>
@@ -288,15 +275,9 @@ function ObjectsFloatingButton({
 //
 //Главная панель
 //
-function MainPanel({
-  selectedSchemeId,
-  setSelectedSchemeId,
-  wellSource,
-}: {
-  selectedSchemeId: number;
-  setSelectedSchemeId: any;
-  wellSource: VectorSource;
-}) {
+function MainPanel({ wellSource }: { wellSource: VectorSource }) {
+  const { selectedSchemeId } = useAppSelector((state) => state.scheme);
+  const dispatch = useAppDispatch();
   const [schemes, setSchemes] = useState<{ value: number; label: string }[]>(
     []
   );
@@ -317,7 +298,10 @@ function MainPanel({
         }));
         setSchemes(schemesOptions);
         if (!selectedSchemeId && schemesOptions.length > 0) {
-          setSelectedSchemeId(schemesOptions[0].value);
+          //setSelectedSchemeId(schemesOptions[0].value);
+          dispatch(
+            schemeSlice.actions.setSelectedSchemeId(schemesOptions[0].value)
+          );
         }
       }
     };
@@ -331,7 +315,7 @@ function MainPanel({
       return;
     }
     await deleteScheme({ scheme_id: selectedSchemeId });
-    setSelectedSchemeId(NaN);
+    dispatch(schemeSlice.actions.setSelectedSchemeId(null));
     setOpenDeleteDialog(false);
   };
 
@@ -347,7 +331,7 @@ function MainPanel({
           options={schemes}
           style={{ width: "100%" }}
           onChange={(value, option) => {
-            setSelectedSchemeId(value);
+            dispatch(schemeSlice.actions.setSelectedSchemeId(value));
           }}
           dropdownRender={(menu) => (
             <>
@@ -412,13 +396,15 @@ function MainPanel({
       </Space>
 
       {/* Создание и Редактирование схемы */}
-      <SchemeForm
-        scheme_id={selectedSchemeId}
-        openSchemeForm={openSchemeForm}
-        setOpenSchemeForm={setOpenSchemeForm}
-        formMode={formMode}
-        onSuccess={() => {}}
-      />
+      {selectedSchemeId && (
+        <SchemeForm
+          scheme_id={selectedSchemeId}
+          openSchemeForm={openSchemeForm}
+          setOpenSchemeForm={setOpenSchemeForm}
+          formMode={formMode}
+          onSuccess={() => {}}
+        />
+      )}
 
       {/* Удаление схемы */}
       <Modal

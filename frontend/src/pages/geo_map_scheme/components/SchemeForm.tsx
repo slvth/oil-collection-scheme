@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { Form, Modal, Input, Select } from "antd";
+import { useState, useEffect } from "react";
+import { Form, Modal, Input } from "antd";
 import {
   createScheme,
   getSchemeBySchemeId,
   Scheme,
   updateScheme,
 } from "../../../services/Scheme";
-import { set } from "ol/transform";
 
 export enum FormMode {
   create,

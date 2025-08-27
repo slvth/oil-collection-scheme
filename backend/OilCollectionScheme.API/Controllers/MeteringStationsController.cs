@@ -81,10 +81,32 @@ namespace OilCollectionScheme.API.Controllers
         }
 
         [HttpGet("/MeteringStationTypes")]
-        public async Task<ActionResult<Dictionary<string, List<MeteringStationType>>>> getMeteringStationTypes()
+        public async Task<ActionResult<Dictionary<string, List<MeteringStationTypesResponse>>>> getMeteringStationTypes()
         {
             var meteringStationTypes = await _meteringStationsService.GetMeteringStationTypes();
-            var result = new Dictionary<string, List<MeteringStationType>>() { ["metering_station_types"] = meteringStationTypes };
+            var response = meteringStationTypes
+                .Select((mst) => 
+                    new MeteringStationTypesResponse(
+                        mst.MeteringStationTypeId, 
+                        mst.Name
+                    )
+                ).ToList();
+            var result = new Dictionary<string, List<MeteringStationTypesResponse>>() { ["metering_station_types"] = response };
+            return Ok(result);
+        }
+
+        [HttpGet("/CounterTypes")]
+        public async Task<ActionResult<Dictionary<string, List<CounterTypesResponse>>>> getCounterTypes()
+        {
+            var counterTypes = await _meteringStationsService.GetCounterTypes();
+            var response = counterTypes
+                .Select((counterType) =>
+                     new CounterTypesResponse(
+                         counterType.CounterTypeId,
+                         counterType.Name
+                     )
+                ).ToList();
+            var result = new Dictionary<string, List<CounterTypesResponse>>() { ["counter_types"] = response };
             return Ok(result);
         }
 

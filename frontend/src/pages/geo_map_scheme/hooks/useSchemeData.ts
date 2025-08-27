@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 
-import { Feature, Map } from "ol";
+import { Feature } from "ol";
 import { Vector as VectorSource } from "ol/source";
 import { transform } from "ol/proj";
-import { Point } from "ol/geom";
+import { LineString, Point } from "ol/geom";
 
 import {
   getMeteringStations,
@@ -11,38 +11,58 @@ import {
   getStorageTanks,
   getWells,
 } from "../../../services/Scheme";
+import { useAppSelector, useAppDispatch } from "../../../hooks/redux";
+import {
+  clearPipeSource,
+  GetMeteringStations,
+  GetPipes,
+  GetProductParks,
+  GetPumpingStations,
+  GetWells,
+} from "../../../store/reducers/SchemeSlice";
+import { IPipe } from "../../../models/IPipe";
 
 interface FetchSchemeDataProp {
-  mapInstance: React.RefObject<Map>;
-  wellSource: React.RefObject<VectorSource>;
-  gzuSource: React.RefObject<VectorSource>;
-  dnsSource: React.RefObject<VectorSource>;
-  productParkSource: React.RefObject<VectorSource>;
-  pipeSource: React.RefObject<VectorSource>;
-  selectedSchemeId: number;
+  selectedSchemeId: number | null;
 }
-export function useSchemeData({
-  mapInstance,
-  wellSource,
-  gzuSource,
-  dnsSource,
-  productParkSource,
-  pipeSource,
-  selectedSchemeId,
-}: FetchSchemeDataProp) {
+export function useSchemeData({ selectedSchemeId }: FetchSchemeDataProp) {
+  const {
+    map,
+    pipeSource,
+    wellSource,
+    meteringStationSource,
+    pumpingStationSource,
+    productParkSource,
+    pipes,
+  } = useAppSelector((state) => state.scheme);
+
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (!selectedSchemeId) {
+      return;
+    }
+    const scheme_id = selectedSchemeId;
+    dispatch(GetWells(scheme_id));
+    dispatch(GetMeteringStations(scheme_id));
+    dispatch(GetPumpingStations(scheme_id));
+    dispatch(GetProductParks(scheme_id));
+    dispatch(GetPipes(scheme_id));
+  }, [selectedSchemeId]);
+
   useEffect(() => {
     const fetchSchemeData = async () => {
-      wellSource.current.clear();
-      gzuSource.current?.clear();
-      dnsSource.current?.clear();
-      productParkSource.current?.clear();
-      pipeSource.current?.clear();
+      wellSource.clear();
+      meteringStationSource.clear();
+      pumpingStationSource.clear();
+      productParkSource.clear();
+      pipeSource.clear();
+      dispatch(clearPipeSource());
 
-      const scheme_id = selectedSchemeId;
+      const scheme_id = selectedSchemeId!;
 
       try {
-        // Получаем данные с сервера
-        const [wells, meteringStations, pumpingStations, storageTanks] =
+        const [wells, meteringStations, pumpingStations, productParks] =
           await Promise.all([
             getWells({ scheme_id }),
             getMeteringStations({ scheme_id }),
@@ -60,30 +80,43 @@ export function useSchemeData({
         const filteredPumpingStations = pumpingStations.filter(
           (ps: any) => ps.latitude && ps.longitude
         );
-        const filteredStorageTanks = storageTanks.filter(
+        const filteredStorageTanks = productParks.filter(
           (st: any) => st.latitude && st.longitude
         );
+        if (pipes.length > 0) {
+          console.log(pipes);
+
+          const filteredPipes = pipes.filter(
+            (pipe: IPipe) =>
+              pipe.coordinates && pipe.scheme_id === selectedSchemeId
+          );
+          console.log(filteredPipes);
+          addFeaturesToLineSource(pipeSource, filteredPipes);
+        }
 
         // Добавляем отфильтрованные объекты на карту
-        addFeaturesToSource(wellSource.current, filteredWells);
-        addFeaturesToSource(gzuSource.current, filteredMeteringStations);
-        addFeaturesToSource(dnsSource.current, filteredPumpingStations);
-        addFeaturesToSource(productParkSource.current, filteredStorageTanks);
+        addFeaturesToPointSource(wellSource, filteredWells);
+        addFeaturesToPointSource(
+          meteringStationSource,
+          filteredMeteringStations
+        );
+        addFeaturesToPointSource(pumpingStationSource, filteredPumpingStations);
+        addFeaturesToPointSource(productParkSource, filteredStorageTanks);
       } catch (error) {
         console.error("Ошибка при загрузке данных схемы:", error);
       }
     };
 
-    if (mapInstance.current && selectedSchemeId) {
+    if (selectedSchemeId) {
       fetchSchemeData();
     }
-  }, [mapInstance.current, selectedSchemeId]);
+  }, [selectedSchemeId, pipes]);
 
   // Вспомогательная функция для добавления фич в источник
-  const addFeaturesToSource = (source: VectorSource, items: any[]) => {
+  const addFeaturesToPointSource = (source: VectorSource, items: any[]) => {
     if (!source) return;
 
-    const viewProjection = mapInstance.current.getView().getProjection();
+    const viewProjection = map.getView().getProjection();
 
     const features = items.map((item) => {
       const wgs84Coords = [item.latitude, item.longitude];
@@ -94,6 +127,35 @@ export function useSchemeData({
         ...item,
       });
     });
+
+    source.addFeatures(features);
+  };
+
+  const addFeaturesToLineSource = (source: VectorSource, items: IPipe[]) => {
+    if (!source) return;
+
+    const viewProjection = map.getView().getProjection();
+
+    const features = items
+      .map((item) => {
+        if (!item.coordinates || item.coordinates.length < 2) {
+          console.warn("Pipe has insufficient coordinates:", item);
+          return null;
+        }
+
+        // Преобразуем все координаты из WGS84 в проекцию карты
+        const lineCoords = item.coordinates.map((coord) => {
+          const wgs84Coords = [coord.latitude, coord.longitude]; // longitude first!
+          return transform(wgs84Coords, "EPSG:4326", viewProjection);
+        });
+
+        const line = new LineString(lineCoords);
+        return new Feature({
+          geometry: line,
+          ...item,
+        });
+      })
+      .filter((feature) => feature !== null) as Feature[]; // Фильтруем null значения
 
     source.addFeatures(features);
   };

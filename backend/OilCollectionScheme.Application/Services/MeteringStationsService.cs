@@ -42,5 +42,9 @@ namespace OilCollectionScheme.Application.Services
             return await _meteringStationsRepository.GetTypes();
         }
 
+        public async Task<List<CounterType>> GetCounterTypes()
+        {
+            return await _meteringStationsRepository.GetCounterTypes();
+        }
     }
 }

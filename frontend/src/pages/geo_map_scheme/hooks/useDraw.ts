@@ -1,8 +1,14 @@
-import React, { Dispatch, SetStateAction, useEffect, useRef } from "react";
+import React, {
+  Dispatch,
+  RefObject,
+  SetStateAction,
+  useEffect,
+  useRef,
+} from "react";
 
 import { Map } from "ol";
 import { Point } from "ol/geom";
-import { Draw } from "ol/interaction";
+import { Draw, Select } from "ol/interaction";
 import { DrawEvent } from "ol/interaction/Draw";
 import { transform } from "ol/proj";
 import { Vector as VectorSource } from "ol/source";
@@ -16,56 +22,67 @@ import {
   StorageTank,
   createStorageTank,
 } from "../../../services/Scheme";
-import { Vector as VectorLayer } from "ol/layer";
+import { useAppDispatch, useAppSelector } from "../../../hooks/redux";
+import { setPendingFeature as setPendingFeatureAction } from "../../../store/reducers/SchemeSlice";
 
 interface DrawProp {
-  mapInstance: React.RefObject<Map>;
-  wellSource: React.RefObject<VectorSource>;
-  gzuSource: React.RefObject<VectorSource>;
-  dnsSource: React.RefObject<VectorSource>;
-  productParkSource: React.RefObject<VectorSource>;
-  pipeSource: React.RefObject<VectorSource>;
-  selectedSchemeId: number;
-  wellFormOpen: boolean;
   setWellFormOpen: Dispatch<SetStateAction<boolean>>;
+  setOpenMeteringStationForm: Dispatch<SetStateAction<boolean>>;
+  setOpenPumpingStationForm: Dispatch<SetStateAction<boolean>>;
+  setOpenStorageTankForm: Dispatch<SetStateAction<boolean>>;
   setPendingFeature: Dispatch<SetStateAction<DrawEvent | null>>;
+  selectInteraction: React.RefObject<Select>;
 }
 
 export function useDraw({
-  mapInstance,
-  wellSource,
-  gzuSource,
-  dnsSource,
-  productParkSource,
-  pipeSource,
-  selectedSchemeId,
-  wellFormOpen,
   setWellFormOpen,
+  setOpenMeteringStationForm,
+  setOpenPumpingStationForm,
+  setOpenStorageTankForm,
   setPendingFeature,
+  selectInteraction,
 }: DrawProp) {
-  const wellDraw = useRef(
-    new Draw({ source: wellSource.current, type: "Point" })
-  );
+  const {
+    map,
+    selectedSchemeId,
+    pipeSource,
+    wellSource,
+    meteringStationSource,
+    pumpingStationSource,
+    productParkSource,
+  } = useAppSelector((state) => state.scheme);
+  const dispatch = useAppDispatch();
+
+  const wellDraw = useRef(new Draw({ source: wellSource, type: "Point" }));
   const gzuDraw = useRef(
-    new Draw({ source: gzuSource.current, type: "Point" })
+    new Draw({ source: meteringStationSource, type: "Point" })
   );
   const dnsDraw = useRef(
-    new Draw({ source: dnsSource.current, type: "Point" })
+    new Draw({ source: pumpingStationSource, type: "Point" })
   );
   const productParkDraw: any = useRef(
-    new Draw({ source: productParkSource.current, type: "Point" })
+    new Draw({ source: productParkSource, type: "Point" })
   );
   const pipeDraw: any = useRef(
-    new Draw({ source: pipeSource.current, type: "LineString" })
+    new Draw({
+      source: pipeSource,
+      type: "LineString",
+      stopClick: true,
+      freehand: false,
+    })
   );
 
   useEffect(() => {
-    const wellHandler = async (e: DrawEvent) => {
+    if (!selectedSchemeId) {
+      return;
+    }
+    const wellHandler = (e: DrawEvent) => {
       setWellFormOpen(true);
       setPendingFeature(e);
+      dispatch(setPendingFeatureAction(e.feature));
       /*
       await onWellDrawEnd({
-        mapInstance,
+        map,
         wellSource,
         selectedSchemeId,
         setWellFormOpen,
@@ -74,34 +91,40 @@ export function useDraw({
       */
     };
     const gzuHandler = async (e: DrawEvent) => {
-      await onGzuDrawEnd({ mapInstance, selectedSchemeId, e });
+      setOpenMeteringStationForm(true);
+      dispatch(setPendingFeatureAction(e.feature));
+      //await onGzuDrawEnd({ map, selectedSchemeId, e });
     };
     const dnsHandler = async (e: DrawEvent) => {
-      await onDnsDrawEnd({ mapInstance, selectedSchemeId, e });
+      setOpenPumpingStationForm(true);
+      dispatch(setPendingFeatureAction(e.feature));
+      //await onDnsDrawEnd({ map, selectedSchemeId, e });
     };
     const productParkHandler = async (e: DrawEvent) => {
-      await onProductParkDrawEnd({ mapInstance, selectedSchemeId, e });
+      setOpenStorageTankForm(true);
+      dispatch(setPendingFeatureAction(e.feature));
+      //await onProductParkDrawEnd({ map, selectedSchemeId, e });
     };
 
     //Скважины
     wellDraw.current.setActive(false);
-    mapInstance.current.addInteraction(wellDraw.current);
+    map.addInteraction(wellDraw.current);
     wellDraw.current.on("drawend", wellHandler);
     //ГЗУ
     gzuDraw.current.setActive(false);
-    mapInstance.current.addInteraction(gzuDraw.current);
+    map.addInteraction(gzuDraw.current);
     gzuDraw.current.on("drawend", gzuHandler);
     //ДНС
     dnsDraw.current.setActive(false);
-    mapInstance.current.addInteraction(dnsDraw.current);
+    map.addInteraction(dnsDraw.current);
     dnsDraw.current.on("drawend", dnsHandler);
     //Товарный парк
     productParkDraw.current.setActive(false);
-    mapInstance.current.addInteraction(productParkDraw.current);
+    map.addInteraction(productParkDraw.current);
     productParkDraw.current.on("drawend", productParkHandler);
     //Трубы
     pipeDraw.current.setActive(false);
-    mapInstance.current.addInteraction(pipeDraw.current);
+    map.addInteraction(pipeDraw.current);
 
     return () => {
       wellDraw.current.un("drawend", wellHandler);
@@ -109,19 +132,19 @@ export function useDraw({
       dnsDraw.current.un("drawend", dnsHandler);
       productParkDraw.current.un("drawend", productParkHandler);
     };
-  }, [mapInstance.current, selectedSchemeId]);
+  }, [map, selectedSchemeId]);
 
   return { wellDraw, gzuDraw, dnsDraw, productParkDraw, pipeDraw };
 }
 
 async function onWellDrawEnd({
-  mapInstance,
+  map,
   wellSource,
   selectedSchemeId,
   setWellFormOpen,
   e,
 }: {
-  mapInstance: React.RefObject<Map>;
+  map: Map;
   wellSource: React.RefObject<VectorSource>;
   selectedSchemeId: number;
   setWellFormOpen: Dispatch<SetStateAction<boolean>>;
@@ -148,7 +171,7 @@ async function onWellDrawEnd({
   const coordinates = point.getCoordinates();
   const wgs84Coords = transform(
     coordinates,
-    mapInstance.current.getView().getProjection(),
+    map.getView().getProjection(),
     "EPSG:4326"
   );
   var well: Well = {
@@ -162,11 +185,11 @@ async function onWellDrawEnd({
 }
 
 async function onGzuDrawEnd({
-  mapInstance,
+  map,
   selectedSchemeId,
   e,
 }: {
-  mapInstance: React.RefObject<Map>;
+  map: Map;
   selectedSchemeId: number;
   e: DrawEvent;
 }) {
@@ -185,7 +208,7 @@ async function onGzuDrawEnd({
     const coordinates = geometry.getCoordinates();
     const wgs84Coords = transform(
       coordinates,
-      mapInstance.current.getView().getProjection(),
+      map.getView().getProjection(),
       "EPSG:4326"
     );
     var meteringStation: MeteringStation = {
@@ -201,11 +224,11 @@ async function onGzuDrawEnd({
 }
 
 async function onDnsDrawEnd({
-  mapInstance,
+  map,
   selectedSchemeId,
   e,
 }: {
-  mapInstance: React.RefObject<Map>;
+  map: Map;
   selectedSchemeId: number;
   e: DrawEvent;
 }) {
@@ -220,7 +243,7 @@ async function onDnsDrawEnd({
     const coordinates = geometry.getCoordinates();
     const wgs84Coords = transform(
       coordinates,
-      mapInstance.current.getView().getProjection(),
+      map.getView().getProjection(),
       "EPSG:4326"
     );
     var pumpingStation: PumpingStation = {
@@ -234,11 +257,11 @@ async function onDnsDrawEnd({
 }
 
 async function onProductParkDrawEnd({
-  mapInstance,
+  map,
   selectedSchemeId,
   e,
 }: {
-  mapInstance: React.RefObject<Map>;
+  map: Map;
   selectedSchemeId: number;
   e: DrawEvent;
 }) {
@@ -253,7 +276,7 @@ async function onProductParkDrawEnd({
     const coordinates = geometry.getCoordinates();
     const wgs84Coords = transform(
       coordinates,
-      mapInstance.current.getView().getProjection(),
+      map.getView().getProjection(),
       "EPSG:4326"
     );
     var storageTank: StorageTank = {

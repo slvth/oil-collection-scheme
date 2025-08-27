@@ -15,5 +15,6 @@ namespace OilCollectionScheme.Core.Abstracts.Services
         Task<int> DeleteMeteringStation(int meteringStationId);
 
         Task<List<MeteringStationType>> GetMeteringStationTypes();
+        Task<List<CounterType>> GetCounterTypes();
     }
 }

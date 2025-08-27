@@ -4,6 +4,7 @@ using OilCollectionScheme.Application.Services;
 using OilCollectionScheme.Core.Abstracts.Services;
 using OilCollectionScheme.Core.Models;
 using OilCollectionScheme.Core.Models.ValueObjects;
+using System.Xml.Linq;
 
 namespace OilCollectionScheme.API.Controllers
 {
@@ -90,19 +91,21 @@ namespace OilCollectionScheme.API.Controllers
         }
 
         [HttpGet("/WellPumps")]
-        public async Task<ActionResult<Dictionary<string, List<WellPump>>>> GetWellPumps()
+        public async Task<ActionResult<Dictionary<string, List<WellPumpsResponse>>>> GetWellPumps()
         {
             var wellPumps = await _wellService.GetWellPumps();
-            var result = new Dictionary<string, List<WellPump>>() { ["well_pumps"] =  wellPumps };
+            var wellPumpsResponse = wellPumps.Select((wellPump) =>  new WellPumpsResponse(wellPump.WellPumpId, wellPump.Name)).ToList();
+            var result = new Dictionary<string, List<WellPumpsResponse>>() { ["well_pumps"] = wellPumpsResponse };
 
             return Ok(result);
         }
 
         [HttpGet("/WellTypes")]
-        public async Task<ActionResult<Dictionary<string, List<WellType>>>> GetWellTypes()
+        public async Task<ActionResult<Dictionary<string, List<WellTypesResponse>>>> GetWellTypes()
         {
             var wellTypes = await _wellService.GetWellTypes();
-            var result = new Dictionary<string, List<WellType>>() { ["well_types"] = wellTypes };
+            var wellTypesResponse = wellTypes.Select((wellType) => new WellTypesResponse(wellType.WellTypeId, wellType.Name)).ToList(); 
+            var result = new Dictionary<string, List<WellTypesResponse>>() { ["well_types"] = wellTypesResponse };
 
             return Ok(result);
         }
