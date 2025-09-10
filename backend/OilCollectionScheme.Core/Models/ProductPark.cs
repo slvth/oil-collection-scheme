@@ -8,24 +8,24 @@ using System.Threading.Tasks;
 
 namespace OilCollectionScheme.Core.Models
 {
-    public class StorageTank
+    public class ProductPark
     {
-        public StorageTank(string name, GeoPoint? coordinate, int schemeId)
+        public ProductPark(string name, GeoPoint? coordinate, int schemeId)
         {
             Name = name;
             Coordinate = coordinate;
             SchemeId = schemeId;
         }
 
-        public StorageTank(int storageTankId, string name, GeoPoint? coordinate, int schemeId)
+        public ProductPark(int productParkId, string name, GeoPoint? coordinate, int schemeId)
         {
-            StorageTankId = storageTankId;
+            ProductParkId = productParkId;
             Name = name;
             Coordinate = coordinate;
             SchemeId = schemeId;
         }
 
-        public int StorageTankId { get; set; }
+        public int ProductParkId { get; set; }
 
         public string Name { get; set; } = null!;
 

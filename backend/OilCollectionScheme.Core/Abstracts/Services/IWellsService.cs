@@ -15,7 +15,8 @@ namespace OilCollectionScheme.Core.Abstracts.Services
         Task<int> UpdateWell(int wellId, Well well);
         Task<int> DeleteWell(int wellId);
 
-        Task<List<WellType>> GetWellTypes();
+        Task<List<LiftMethod>> GetLiftMethods();
+        Task<List<Models.DriveType>> GetDriveTypes();
         Task<List<WellPump>> GetWellPumps();
     }
 }

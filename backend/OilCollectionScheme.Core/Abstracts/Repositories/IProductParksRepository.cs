@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace OilCollectionScheme.Core.Abstracts.Repositories
 {
-    public interface IStorageTanksRepository
+    public interface IProductParksRepository
     {
-        Task<List<StorageTank>> GetAllBySchemeId(int schemeId);
-        Task<int> Create(StorageTank storageTank);
-        Task<int> Update(StorageTank storageTank);
+        Task<List<ProductPark>> GetAllBySchemeId(int schemeId);
+        Task<int> Create(ProductPark storageTank);
+        Task<int> Update(ProductPark storageTank);
         Task<int> Delete(int storageTankId);
     }
 }

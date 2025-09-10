@@ -77,6 +77,15 @@ export function PumpingStationModal({
           longitude,
         })
       );
+
+      const pumpingStation = pumpingStations.find(
+        (ps) => ps.pumping_station_id === selectedId
+      );
+      pendingFeature.setProperties({
+        ...pumpingStation,
+        type: "pumpingStation",
+      });
+
       setOpen(false);
       //setSelectedId(null);
     }
@@ -96,7 +105,10 @@ export function PumpingStationModal({
       pumpingStation.longitude = wgs84Coords[1];
 
       dispatch(CreatePumpingStation(pumpingStation));
-      pendingFeature.setProperties({ name: pumpingStation.name });
+      pendingFeature.setProperties({
+        ...pumpingStation,
+        type: "pumpingStation",
+      });
       setOpen(false);
     }
   }

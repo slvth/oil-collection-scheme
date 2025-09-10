@@ -9,31 +9,31 @@ using System.Threading.Tasks;
 
 namespace OilCollectionScheme.Application.Services
 {
-    public class StorageTanksService : IStorageTanksService
+    public class StorageTanksService : IProductParksService
     {
-        private readonly IStorageTanksRepository _storageTanksRepository;
+        private readonly IProductParksRepository _storageTanksRepository;
 
-        public StorageTanksService(IStorageTanksRepository storageTanksRepository)
+        public StorageTanksService(IProductParksRepository storageTanksRepository)
         {
             _storageTanksRepository = storageTanksRepository;
         }
 
-        public async Task<List<StorageTank>> GetAllStorageTanksBySchemeId(int schemeId)
+        public async Task<List<ProductPark>> GetAllProductParksBySchemeId(int schemeId)
         {
             return await _storageTanksRepository.GetAllBySchemeId(schemeId);
         }
 
-        public async Task<int> CreateStorageTank(StorageTank storageTank)
+        public async Task<int> CreateProductPark(ProductPark storageTank)
         {
             return await _storageTanksRepository.Create(storageTank);
         }
 
-        public async Task<int> UpdateStorageTank(StorageTank storageTank)
+        public async Task<int> UpdateProductPark(ProductPark storageTank)
         {
             return await _storageTanksRepository.Update(storageTank);
         }
 
-        public async Task<int> DeleteStorageTank(int storageTankId)
+        public async Task<int> DeleteProductPark(int storageTankId)
         {
             return await _storageTanksRepository.Delete(storageTankId);
         }

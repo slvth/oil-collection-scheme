@@ -1,4 +1,4 @@
-import { Button, Form, Input, Select, Space } from "antd";
+import { Button, Form, Input, InputNumber, Select, Space } from "antd";
 import { FormInstance, useForm } from "antd/es/form/Form";
 import { IMeteringStation } from "../../../models/IMeteringStation";
 import { useAppSelector } from "../../../hooks/redux";
@@ -42,7 +42,6 @@ export function CreateMeteringStationForm({
       label: counterType.name,
     }));
     setCounterTypeOptions(options);
-    alert(JSON.stringify(counterTypes));
   }, [counterTypes]);
 
   async function onSubmit(values: IMeteringStation) {
@@ -58,7 +57,12 @@ export function CreateMeteringStationForm({
 
   return (
     <>
-      <Form form={form} onFinish={onSubmit}>
+      <Form
+        form={form}
+        onFinish={onSubmit}
+        labelCol={{ span: 9 }}
+        requiredMark="optional"
+      >
         <Form.Item
           name="name"
           label="Название"
@@ -90,6 +94,45 @@ export function CreateMeteringStationForm({
             optionFilterProp="label"
             style={{ width: "100%" }}
             options={counterTypeOptions}
+          />
+        </Form.Item>
+        <Form.Item
+          name="cycle_time"
+          label="Время цикла"
+          rules={[{ required: true, message: "Введите время цикла" }]}
+        >
+          <InputNumber
+            changeOnWheel
+            suffix="мин"
+            min={1}
+            max={1440}
+            style={{ width: "100%" }}
+          />
+        </Form.Item>
+        <Form.Item
+          name="pressure"
+          label="Давление"
+          rules={[{ required: true, message: "Введите давление" }]}
+        >
+          <InputNumber
+            changeOnWheel
+            suffix="МПа"
+            min={1}
+            max={100}
+            style={{ width: "100%" }}
+          />
+        </Form.Item>
+        <Form.Item
+          name="flowline_count"
+          label="Количество усов"
+          rules={[{ required: true, message: "Введите количество усов" }]}
+        >
+          <InputNumber
+            changeOnWheel
+            min={1}
+            max={100}
+            precision={0}
+            style={{ width: "100%" }}
           />
         </Form.Item>
         <Form.Item style={{ marginBottom: 0 }}>

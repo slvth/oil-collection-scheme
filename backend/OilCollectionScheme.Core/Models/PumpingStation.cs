@@ -10,27 +10,60 @@ namespace OilCollectionScheme.Core.Models
 {
     public class PumpingStation
     {
-        public PumpingStation(string name, GeoPoint? coordinate, int schemeId)
+        public PumpingStation(
+            string name,
+            float pressureWorking,
+            float tankVolume,
+            float throughput,
+            float pumpPerformance,
+            GeoPoint? coordinate,
+            int schemeId
+        )
         {
             Name = name;
+            PressureWorking = pressureWorking;
+            TankVolume = tankVolume;
+            Throughput = throughput;
+            PumpPerformance = pumpPerformance;
             Coordinate = coordinate;
             SchemeId = schemeId;
         }
 
-        public PumpingStation(int pumpingStationId, string name, GeoPoint? coordinate, int schemeId)
+        public PumpingStation(
+            int pumpingStationId,
+            string name, 
+            float pressureWorking, 
+            float tankVolume, 
+            float throughput, 
+            float pumpPerformance, 
+            GeoPoint? coordinate, 
+            int schemeId
+        )
         {
             PumpingStationId = pumpingStationId;
             Name = name;
+            PressureWorking = pressureWorking;
+            TankVolume = tankVolume;
+            Throughput = throughput;
+            PumpPerformance = pumpPerformance;
             Coordinate = coordinate;
             SchemeId = schemeId;
         }
 
-        public int PumpingStationId { get; set; }
+        public int PumpingStationId { get; }
 
-        public string Name { get; set; } = null!;
+        public string Name { get; } = null!;
 
-        public GeoPoint? Coordinate { get; set; }
+        public float PressureWorking { get; }
 
-        public int SchemeId { get; set; }
+        public float TankVolume { get; }
+
+        public float Throughput { get; }
+
+        public float PumpPerformance { get; }
+
+        public GeoPoint? Coordinate { get; }
+
+        public int SchemeId { get; }
     }
 }

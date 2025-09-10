@@ -10,13 +10,19 @@ public partial class WellEntity
 
     public string Name { get; set; } = null!;
 
-    public int? WellTypeId { get; set; }
+    public int? DriveTypeId { get; set; }
 
     public int WellPumpId { get; set; }
 
     public float? LengthStroke { get; set; }
 
     public float? NumberSwings { get; set; }
+
+    public float WaterCut { get; set; }
+
+    public float FlowRate { get; set; }
+
+    public float FlowRateOil { get; set; }
 
     public Point? Coordinate { get; set; }
 
@@ -26,5 +32,5 @@ public partial class WellEntity
 
     public virtual WellPumpEntity WellPump { get; set; } = null!;
 
-    public virtual WellTypeEntity? WellType { get; set; }
+    public virtual DriveTypeEntity? DriveType { get; set; }
 }

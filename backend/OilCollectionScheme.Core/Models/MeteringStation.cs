@@ -9,29 +9,59 @@ namespace OilCollectionScheme.Core.Models
 {
     public class MeteringStation
     {
-
-        public MeteringStation(string name, int meteringStationTypeId, int counterTypeId, GeoPoint? coordinate, int schemeId)
+        public MeteringStation(
+           string name,
+           float cycleTime,
+           float pressure,
+           int flowlineCount,
+           int meteringStationTypeId,
+           int counterTypeId,
+           GeoPoint? coordinate,
+           int schemeId
+       )
         {
             Name = name;
+            CycleTime = cycleTime;
+            Pressure = pressure;
+            FlowlineCount = flowlineCount;
             MeteringStationTypeId = meteringStationTypeId;
             CounterTypeId = counterTypeId;
             Coordinate = coordinate;
             SchemeId = schemeId;
         }
 
-        public MeteringStation(int meteringStationId, string name, int meteringStationTypeId, int counterTypeId, GeoPoint? coordinate, int schemeId)
+        public MeteringStation(
+            int meteringStationId,
+            string name,
+            float cycleTime,
+            float pressure,
+            int flowlineCount,
+            int meteringStationTypeId,
+            int counterTypeId,
+            GeoPoint? coordinate,
+            int schemeId
+        )
         {
             MeteringStationId = meteringStationId;
             Name = name;
+            CycleTime = cycleTime;
+            Pressure = pressure;
+            FlowlineCount = flowlineCount;
             MeteringStationTypeId = meteringStationTypeId;
             CounterTypeId = counterTypeId;
             Coordinate = coordinate;
             SchemeId = schemeId;
         }
-
+        
         public int MeteringStationId { get; }
 
         public string Name { get; } = null!;
+
+        public float CycleTime { get; }
+
+        public float Pressure { get; }
+
+        public int FlowlineCount { get; }
 
         public int MeteringStationTypeId { get;  }
 

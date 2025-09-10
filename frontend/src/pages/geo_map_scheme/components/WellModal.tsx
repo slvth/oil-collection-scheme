@@ -7,7 +7,7 @@ import {
   TabsProps,
   Typography,
 } from "antd";
-import { createWell, getWells, Well } from "../../../services/Scheme";
+
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 import { DrawEvent } from "ol/interaction/Draw";
 import { Vector as VectorSource } from "ol/source";
@@ -26,16 +26,9 @@ import { CreateWellForm } from "./CreateWellForm";
 import { wellIcon } from "../../../assets";
 import { useForm } from "antd/es/form/Form";
 
-export enum FormMode {
-  create,
-  update,
-}
-
 interface WellFormProp {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
-  well?: Well;
-  formMode?: FormMode;
   pendingFeature: DrawEvent | null;
   setPendingFeature: Dispatch<SetStateAction<DrawEvent | null>>;
   wellSource: VectorSource;
@@ -50,14 +43,15 @@ export default function WellModal({
   wellSource,
   mapInstance,
 }: WellFormProp) {
-  const [formCreate] = useForm();
   console.log("Render WellForm");
   const { wells, selectedSchemeId } = useAppSelector((state) => state.scheme);
+  const dispatch = useAppDispatch();
+
+  const [formCreate] = useForm();
   const [selectedWellId, setSelectedWellId] = useState<number | null>(null);
   const [wellOptions, setWellOptions] = useState<
     { value: number; label: string }[]
   >([]);
-  const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (!wells) {
@@ -163,7 +157,6 @@ function AddWellDrawForm({
   selectedWellId,
   setSelectedWellId,
   setOpen,
-  pendingFeature,
   setPendingFeature,
   wellSource,
   mapInstance,
@@ -178,12 +171,13 @@ function AddWellDrawForm({
   wellSource: VectorSource;
   mapInstance: Map;
 }) {
+  const { wells, pendingFeature } = useAppSelector((state) => state.scheme);
   const dispatch = useAppDispatch();
   console.log("Render AddWellDrawForm");
 
   const OnAddWell = async () => {
     if (pendingFeature && mapInstance && selectedWellId) {
-      const geometry = pendingFeature.feature.getGeometry();
+      const geometry = pendingFeature.getGeometry();
       const point = geometry as Point;
       const coordinates = point.getCoordinates();
       const wgs84Coords = transform(
@@ -195,9 +189,10 @@ function AddWellDrawForm({
       const longitude = wgs84Coords[1];
 
       dispatch(UpdateWell({ well_id: selectedWellId, latitude, longitude }));
-      pendingFeature.feature.setProperties({
-        name: wellOptions.find((option) => option.value === selectedWellId)
-          ?.label,
+      const well = wells.find((w) => w.well_id === selectedWellId);
+      pendingFeature.setProperties({
+        ...well,
+        type: "well",
       });
 
       setOpen(false);
@@ -223,7 +218,7 @@ function AddWellDrawForm({
           onClick={() => {
             setOpen(false);
             if (pendingFeature) {
-              wellSource.removeFeature(pendingFeature.feature);
+              wellSource.removeFeature(pendingFeature);
             }
             setPendingFeature(null);
           }}

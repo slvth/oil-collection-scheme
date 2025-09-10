@@ -1,6 +1,6 @@
 ﻿namespace OilCollectionScheme.API.Contracts
 {
-    public record StorageTanksRequest
+    public record ProductParksRequest
     (
         string name,
         double? longitude,

@@ -31,6 +31,10 @@ namespace OilCollectionScheme.DataAccess.Repositories
                 new PumpingStation(
                     pt.PumpingStationId,
                     pt.Name,
+                    pt.PressureWorking,
+                    pt.TankVolume,
+                    pt.Throughput,
+                    pt.PumpPerformance,
                     CoordinateMapper.toGeoPoint(pt.Coordinate),
                     pt.SchemeId
                 )
@@ -44,9 +48,12 @@ namespace OilCollectionScheme.DataAccess.Repositories
             var pumpingStationEntity = new PumpingStationEntity
             {
                 Name = pumpingStation.Name,
+                PressureWorking = pumpingStation.PressureWorking,
+                TankVolume = pumpingStation.TankVolume,
+                Throughput = pumpingStation.Throughput,
+                PumpPerformance = pumpingStation.PumpPerformance,
                 Coordinate = coordinate,
                 SchemeId = pumpingStation.SchemeId
-
             };
             await _context.PumpingStations.AddAsync(pumpingStationEntity);
             await _context.SaveChangesAsync();
@@ -60,6 +67,10 @@ namespace OilCollectionScheme.DataAccess.Repositories
                 .Where(pt => pt.PumpingStationId == pumpingStation.PumpingStationId)
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(pt => pt.Name, pumpingStation.Name)
+                    .SetProperty(pt => pt.PressureWorking, pumpingStation.PressureWorking)
+                    .SetProperty(pt => pt.TankVolume, pumpingStation.TankVolume)
+                    .SetProperty(pt => pt.Throughput, pumpingStation.Throughput)
+                    .SetProperty(pt => pt.PumpPerformance, pumpingStation.PumpPerformance)
                     .SetProperty(pt => pt.Coordinate, coordinate)
                     .SetProperty(pt => pt.SchemeId, pumpingStation.SchemeId)
                 );

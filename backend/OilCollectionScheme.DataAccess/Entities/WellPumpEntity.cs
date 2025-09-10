@@ -9,5 +9,9 @@ public partial class WellPumpEntity
 
     public string Name { get; set; } = null!;
 
+    public int LiftMethodId { get; set; }
+
     public virtual ICollection<WellEntity> Wells { get; set; } = new List<WellEntity>();
+
+    public virtual LiftMethodEntity LiftMethod { get; set; } = null!;
 }

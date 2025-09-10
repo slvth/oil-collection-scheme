@@ -1,8 +1,7 @@
 ﻿namespace OilCollectionScheme.API.Contracts
 {
-    public record WellTypesResponse
-    (
-        int well_type_id,
+    public record LiftMethodsResponse(
+        int lift_method_id,
         string name
     );
 }

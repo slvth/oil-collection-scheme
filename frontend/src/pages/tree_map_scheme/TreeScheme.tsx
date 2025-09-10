@@ -131,7 +131,7 @@ export function TreeScheme() {
     const productParkNodes =
       productParks.length > 0
         ? productParks.map((pp, index) => ({
-            id: objectTypeForNode.ProductPark + pp.storage_tank_id?.toString()!,
+            id: objectTypeForNode.ProductPark + pp.product_park_id?.toString()!,
             position: { x: 450, y: index * 50 },
             data: { label: pp.name },
             ...nodeSettings,

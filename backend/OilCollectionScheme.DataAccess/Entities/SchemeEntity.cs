@@ -21,7 +21,7 @@ public partial class SchemeEntity
 
     public virtual ICollection<PumpingStationEntity> PumpingStations { get; set; } = new List<PumpingStationEntity>();
 
-    public virtual ICollection<StorageTankEntity> StorageTanks { get; set; } = new List<StorageTankEntity>();
+    public virtual ICollection<ProductParkEntity> StorageTanks { get; set; } = new List<ProductParkEntity>();
 
     public virtual UserEntity User { get; set; } = null!;
 

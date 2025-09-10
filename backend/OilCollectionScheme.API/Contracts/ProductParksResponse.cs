@@ -2,9 +2,9 @@
 
 namespace OilCollectionScheme.API.Contracts
 {
-    public record StorageTanksResponse
+    public record ProductParksResponse
     (
-        int storage_tank_id, 
+        int product_park_id, 
         string name,
         double? longitude,
         double? latitude,

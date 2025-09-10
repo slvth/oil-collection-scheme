@@ -36,7 +36,7 @@ public partial class DbOilCollectionContext : DbContext
 
     public virtual DbSet<SchemeEntity> Schemes { get; set; }
 
-    public virtual DbSet<StorageTankEntity> StorageTanks { get; set; }
+    public virtual DbSet<ProductParkEntity> ProductParks { get; set; }
 
     public virtual DbSet<UserEntity> Users { get; set; }
 
@@ -44,7 +44,9 @@ public partial class DbOilCollectionContext : DbContext
 
     public virtual DbSet<WellPumpEntity> WellPumps { get; set; }
 
-    public virtual DbSet<WellTypeEntity> WellTypes { get; set; }
+    public virtual DbSet<DriveTypeEntity> DriveTypes { get; set; }
+
+    public virtual DbSet<LiftMethodEntity> LiftMethods { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseNpgsql("User ID=postgres;Password=12345;Host=localhost;Port=5432;Database=db.oil_collection;", x => x.UseNetTopologySuite());
@@ -110,6 +112,9 @@ public partial class DbOilCollectionContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
+            entity.Property(e => e.CycleTime).HasColumnName("cycle_time");
+            entity.Property(e => e.Pressure).HasColumnName("pressure");
+            entity.Property(e => e.FlowlineCount).HasColumnName("flowline_count");
             entity.Property(e => e.SchemeId).HasColumnName("scheme_id");
 
             entity.HasOne(d => d.CounterType).WithMany(p => p.MeteringStations)
@@ -198,6 +203,10 @@ public partial class DbOilCollectionContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
+            entity.Property(e => e.PressureWorking).HasColumnName("pressure_working");
+            entity.Property(e => e.TankVolume).HasColumnName("tank_volume");
+            entity.Property(e => e.Throughput).HasColumnName("throughput");
+            entity.Property(e => e.PumpPerformance).HasColumnName("pump_performance");
             entity.Property(e => e.SchemeId).HasColumnName("scheme_id");
 
             entity.HasOne(d => d.Scheme).WithMany(p => p.PumpingStations)
@@ -241,13 +250,13 @@ public partial class DbOilCollectionContext : DbContext
                 .HasConstraintName("schemes_user_id_fkey");
         });
 
-        modelBuilder.Entity<StorageTankEntity>(entity =>
+        modelBuilder.Entity<ProductParkEntity>(entity =>
         {
-            entity.HasKey(e => e.StorageTankId).HasName("storage_tanks_pkey");
+            entity.HasKey(e => e.ProductParkId).HasName("product_parks_pkey");
 
-            entity.ToTable("storage_tanks");
+            entity.ToTable("product_parks");
 
-            entity.Property(e => e.StorageTankId).HasColumnName("storage_tank_id");
+            entity.Property(e => e.ProductParkId).HasColumnName("product_park_id");
             entity.Property(e => e.Coordinate)
                 .HasColumnType("geometry(Point,4326)")
                 .HasColumnName("coordinate");
@@ -258,7 +267,7 @@ public partial class DbOilCollectionContext : DbContext
 
             entity.HasOne(d => d.Scheme).WithMany(p => p.StorageTanks)
                 .HasForeignKey(d => d.SchemeId)
-                .HasConstraintName("storage_tanks_scheme_id_fkey");
+                .HasConstraintName("product_parks_scheme_id_fkey");
         });
 
         modelBuilder.Entity<UserEntity>(entity =>
@@ -305,9 +314,12 @@ public partial class DbOilCollectionContext : DbContext
                 .HasMaxLength(100)
                 .HasColumnName("name");
             entity.Property(e => e.NumberSwings).HasColumnName("number_swings");
+            entity.Property(e => e.WaterCut).HasColumnName("water_cut");
+            entity.Property(e => e.FlowRate).HasColumnName("flow_rate");
+            entity.Property(e => e.FlowRateOil).HasColumnName("flow_rate_oil");
             entity.Property(e => e.SchemeId).HasColumnName("scheme_id");
             entity.Property(e => e.WellPumpId).HasColumnName("well_pump_id");
-            entity.Property(e => e.WellTypeId).HasColumnName("well_type_id");
+            entity.Property(e => e.DriveTypeId).HasColumnName("drive_type_id");
 
             entity.HasOne(d => d.Scheme).WithMany(p => p.Wells)
                 .HasForeignKey(d => d.SchemeId)
@@ -318,9 +330,9 @@ public partial class DbOilCollectionContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("wells_well_pump_id_fkey");
 
-            entity.HasOne(d => d.WellType).WithMany(p => p.Wells)
-                .HasForeignKey(d => d.WellTypeId)
-                .HasConstraintName("wells_well_type_id_fkey");
+            entity.HasOne(d => d.DriveType).WithMany(p => p.Wells)
+                .HasForeignKey(d => d.DriveTypeId)
+                .HasConstraintName("wells_drive_type_id_fkey");
         });
 
         modelBuilder.Entity<WellPumpEntity>(entity =>
@@ -333,15 +345,37 @@ public partial class DbOilCollectionContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(250)
                 .HasColumnName("name");
+            entity.Property(e => e.LiftMethodId).HasColumnName("lift_method_id");
+
+            entity.HasOne(d => d.LiftMethod).WithMany(d => d.WellPumps)
+                .HasForeignKey(d => d.LiftMethodId)
+                .HasConstraintName("well_pumps_lift_method_id_fkey");
         });
 
-        modelBuilder.Entity<WellTypeEntity>(entity =>
+        modelBuilder.Entity<DriveTypeEntity>(entity =>
         {
-            entity.HasKey(e => e.WellTypeId).HasName("well_types_pkey");
+            entity.HasKey(e => e.DriveTypeId).HasName("drive_types_pkey");
 
-            entity.ToTable("well_types");
+            entity.ToTable("drive_types");
 
-            entity.Property(e => e.WellTypeId).HasColumnName("well_type_id");
+            entity.Property(e => e.DriveTypeId).HasColumnName("drive_type_id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(250)
+                .HasColumnName("name");
+            entity.Property(e => e.LiftMethodId).HasColumnName("lift_method_id");
+
+            entity.HasOne(d => d.LiftMethod).WithMany(d => d.DriveTypes)
+                .HasForeignKey(d => d.LiftMethodId)
+                .HasConstraintName("drive_types_lift_method_id_fkey");
+        });
+
+        modelBuilder.Entity<LiftMethodEntity>(entity =>
+        {
+            entity.HasKey(e => e.LiftMethodId).HasName("lift_methods_pkey");
+
+            entity.ToTable("lift_methods");
+
+            entity.Property(e => e.LiftMethodId).HasColumnName("lift_method_id");
             entity.Property(e => e.Name)
                 .HasMaxLength(250)
                 .HasColumnName("name");

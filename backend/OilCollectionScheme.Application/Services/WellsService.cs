@@ -48,11 +48,14 @@ namespace OilCollectionScheme.Application.Services
             return await _wellsRepository.GetWellPumps();
         }
 
-        public async Task<List<WellType>> GetWellTypes()
+        public async Task<List<Core.Models.DriveType>> GetDriveTypes()
         {
-            return await _wellsRepository.GetWellTypes();
+            return await _wellsRepository.GetDriveTypes();
         }
 
-
+        public async Task<List<LiftMethod>> GetLiftMethods()
+        {
+            return await _wellsRepository.GetLiftMethods();
+        }
     }
 }

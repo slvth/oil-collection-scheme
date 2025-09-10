@@ -3,11 +3,15 @@ using System.Collections.Generic;
 
 namespace OilCollectionScheme.DataAccess.Entities;
 
-public partial class WellTypeEntity
+public partial class DriveTypeEntity
 {
-    public int WellTypeId { get; set; }
+    public int DriveTypeId { get; set; }
 
     public string Name { get; set; } = null!;
 
+    public int LiftMethodId { get; set; }
+
     public virtual ICollection<WellEntity> Wells { get; set; } = new List<WellEntity>();
+   
+    public virtual LiftMethodEntity LiftMethod { get; set; } = null!;
 }

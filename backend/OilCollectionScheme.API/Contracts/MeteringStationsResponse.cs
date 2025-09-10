@@ -4,6 +4,9 @@
     (
         int metering_station_id,
         string name,
+        float cycle_time,
+        float pressure,
+        int flowline_count,
         int metering_station_type_id,
         int counter_type_id,
         double? longitude,

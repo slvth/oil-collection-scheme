@@ -10,12 +10,12 @@ import { IMeteringStation } from "../../models/IMeteringStation";
 import { meteringStationService } from "../../services/MeteringStationsService";
 import { pumpingStationsService } from "../../services/PumpingStationsService";
 import { IPumpingStation } from "../../models/IPumpingStation";
-import { IStorageTank } from "../../models/IStorageTank";
-import { storageTanksService } from "../../services/StorageTanksService";
+import { IProductPark } from "../../models/IStorageTank";
+import { productParksService } from "../../services/ProductParksService";
 import { pipesService } from "../../services/PipesService";
 import { IPipe } from "../../models/IPipe";
 import { IWellPump } from "../../models/IWellPump";
-import { IWellType } from "../../models/IWellType";
+import { IDriveType } from "../../models/IWellType";
 import { IMeteringStationType } from "../../models/IMeteringStationType";
 import { ICounterType } from "../../models/ICounterType";
 
@@ -100,7 +100,7 @@ const GetWellTypes = createAsyncThunk(
   "scheme/well_types/get",
   async (_, thunkAPI) => {
     try {
-      const response = await wellService.getWellTypes();
+      const response = await wellService.getDriveTypes();
       return response;
     } catch (error) {
       thunkAPI.rejectWithValue(
@@ -287,12 +287,12 @@ const UpdatePumpingStation = createAsyncThunk<
 //ProductParks
 const CreateProductPark = createAsyncThunk(
   "scheme/product_parks/create",
-  async (productPark: IStorageTank, { rejectWithValue }) => {
+  async (productPark: IProductPark, { rejectWithValue }) => {
     try {
-      const createdId = await storageTanksService.createStorageTank(
+      const createdId = await productParksService.createProductPark(
         productPark
       );
-      productPark.storage_tank_id = createdId;
+      productPark.product_park_id = createdId;
       return productPark;
     } catch (error) {
       return rejectWithValue("Ошибка при создании ГЗУ. Ошибка: " + error);
@@ -304,7 +304,7 @@ const GetProductParks = createAsyncThunk(
   "scheme/product_parks/get",
   async (scheme_id: number, thunkAPI) => {
     try {
-      const response = await storageTanksService.getStorageTanks(scheme_id);
+      const response = await productParksService.getProductParks(scheme_id);
       return response;
     } catch (error) {
       thunkAPI.rejectWithValue(
@@ -315,9 +315,9 @@ const GetProductParks = createAsyncThunk(
 );
 
 const UpdateProductPark = createAsyncThunk<
-  IStorageTank,
+  IProductPark,
   {
-    storage_tank_id: number;
+    product_park_id: number;
     latitude: number;
     longitude: number;
   },
@@ -325,27 +325,27 @@ const UpdateProductPark = createAsyncThunk<
 >(
   "scheme/product_park/update",
   async (
-    { storage_tank_id, latitude, longitude },
+    { product_park_id, latitude, longitude },
     { rejectWithValue, getState, dispatch }
   ) => {
     const state = getState();
-    const storageTanks = state.scheme.productParks;
-    const currentStorageTank = storageTanks.find(
-      (st) => st.storage_tank_id === storage_tank_id
+    const productParks = state.scheme.productParks;
+    const currentProductPark = productParks.find(
+      (pp) => pp.product_park_id === product_park_id
     );
 
     try {
-      if (currentStorageTank) {
-        const storageTankForUpdate: IStorageTank = {
-          ...currentStorageTank,
+      if (currentProductPark) {
+        const productParkForUpdate: IProductPark = {
+          ...currentProductPark,
           longitude,
           latitude,
         };
-        await storageTanksService.updateStorageTank(storageTankForUpdate);
+        await productParksService.updateProductPark(productParkForUpdate);
         dispatch(GetPipes(state.scheme.selectedSchemeId!));
-        return storageTankForUpdate;
+        return productParkForUpdate;
       } else {
-        throw Error("Не найдена Товарный Парк с такой storage_tank_id");
+        throw Error("Не найдена Товарный Парк с такой product_park_id");
       }
     } catch (error) {
       return rejectWithValue(
@@ -379,15 +379,16 @@ interface SchemeState {
   productParkSource: VectorSource;
   wells: IWell[];
   wellPumps: IWellPump[];
-  wellTypes: IWellType[];
+  wellTypes: IDriveType[];
   meteringStations: IMeteringStation[];
   meteringStationTypes: IMeteringStationType[];
   counterTypes: ICounterType[];
   pumpingStations: IPumpingStation[];
-  productParks: IStorageTank[];
+  productParks: IProductPark[];
   pipes: IPipe[];
   selectedSchemeId: number | null;
   pendingFeature: Feature | null;
+  popupText: { label: string; value: string }[];
 }
 
 const osmLayer = new TileLayer({ source: new OSM() });
@@ -417,13 +418,13 @@ const initialState: SchemeState = {
   pipes: [],
   selectedSchemeId: null,
   pendingFeature: null,
+  popupText: [],
 };
 
 export const schemeSlice = createSlice({
   name: "scheme",
   initialState,
   reducers: {
-    //initLayers(state) {},
     setMapTarget: (state, action: PayloadAction<string>) => {
       state.map.setTarget(action.payload);
     },
@@ -432,6 +433,13 @@ export const schemeSlice = createSlice({
     },
     setPendingFeature: (state, action: PayloadAction<Feature | null>) => {
       state.pendingFeature = action.payload;
+    },
+    clearAllSources: (state) => {
+      state.wellSource.clear();
+      state.meteringStationSource.clear();
+      state.pumpingStationSource.clear();
+      state.productParkSource.clear();
+      state.pipeSource.clear();
     },
     clearPipeSource: (state) => {
       state.pipeSource.clear();
@@ -442,6 +450,12 @@ export const schemeSlice = createSlice({
       state.pumpingStations = [];
       state.productParks = [];
       state.pipes = [];
+    },
+    setPopupText: (
+      state,
+      action: PayloadAction<{ label: string; value: string }[]>
+    ) => {
+      state.popupText = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -502,7 +516,7 @@ export const schemeSlice = createSlice({
     });
     builder.addCase(UpdateProductPark.fulfilled, (state, action) => {
       state.productParks = state.productParks.map((st) =>
-        st.storage_tank_id === action.payload.storage_tank_id
+        st.product_park_id === action.payload.product_park_id
           ? action.payload
           : st
       );
@@ -517,8 +531,10 @@ export const {
   setMapTarget,
   setPendingFeature,
   setSelectedSchemeId,
+  clearAllSources,
   clearPipeSource,
   clearSchemeData,
+  setPopupText,
 } = schemeSlice.actions;
 export {
   GetWells,

@@ -13,14 +13,23 @@ import {
 } from "../../../services/Scheme";
 import { useAppSelector, useAppDispatch } from "../../../hooks/redux";
 import {
+  clearAllSources,
   clearPipeSource,
+  GetCounterTypes,
   GetMeteringStations,
   GetPipes,
   GetProductParks,
   GetPumpingStations,
+  GetWellPumps,
   GetWells,
+  GetWellTypes,
+  setPopupText,
 } from "../../../store/reducers/SchemeSlice";
 import { IPipe } from "../../../models/IPipe";
+import { IWell } from "../../../models/IWell";
+import { IMeteringStation } from "../../../models/IMeteringStation";
+import { IPumpingStation } from "../../../models/IPumpingStation";
+import { IProductPark } from "../../../models/IStorageTank";
 
 interface FetchSchemeDataProp {
   selectedSchemeId: number | null;
@@ -43,11 +52,16 @@ export function useSchemeData({ selectedSchemeId }: FetchSchemeDataProp) {
       return;
     }
     const scheme_id = selectedSchemeId;
+    dispatch(clearAllSources());
+    dispatch(setPopupText([]));
     dispatch(GetWells(scheme_id));
     dispatch(GetMeteringStations(scheme_id));
     dispatch(GetPumpingStations(scheme_id));
     dispatch(GetProductParks(scheme_id));
     dispatch(GetPipes(scheme_id));
+    dispatch(GetWellTypes());
+    dispatch(GetWellPumps());
+    dispatch(GetCounterTypes());
   }, [selectedSchemeId]);
 
   useEffect(() => {
@@ -58,6 +72,7 @@ export function useSchemeData({ selectedSchemeId }: FetchSchemeDataProp) {
       productParkSource.clear();
       pipeSource.clear();
       dispatch(clearPipeSource());
+      dispatch(clearAllSources());
 
       const scheme_id = selectedSchemeId!;
 
@@ -69,39 +84,36 @@ export function useSchemeData({ selectedSchemeId }: FetchSchemeDataProp) {
             getPumpingStations({ scheme_id }),
             getStorageTanks({ scheme_id }),
           ]);
-
-        // Фильтруем объекты без координат
+        console.log(wells);
         const filteredWells = wells.filter(
-          (well: any) => well.latitude && well.longitude
+          (well: IWell) => well.latitude && well.longitude
         );
         const filteredMeteringStations = meteringStations.filter(
-          (ms: any) => ms.latitude && ms.longitude
+          (ms: IMeteringStation) => ms.latitude && ms.longitude
         );
         const filteredPumpingStations = pumpingStations.filter(
-          (ps: any) => ps.latitude && ps.longitude
+          (ps: IPumpingStation) => ps.latitude && ps.longitude
         );
         const filteredStorageTanks = productParks.filter(
-          (st: any) => st.latitude && st.longitude
+          (st: IProductPark) => st.latitude && st.longitude
         );
-        if (pipes.length > 0) {
-          console.log(pipes);
 
-          const filteredPipes = pipes.filter(
-            (pipe: IPipe) =>
-              pipe.coordinates && pipe.scheme_id === selectedSchemeId
-          );
-          console.log(filteredPipes);
-          addFeaturesToLineSource(pipeSource, filteredPipes);
-        }
-
-        // Добавляем отфильтрованные объекты на карту
-        addFeaturesToPointSource(wellSource, filteredWells);
+        addFeaturesToPointSource(wellSource, filteredWells, "well");
         addFeaturesToPointSource(
           meteringStationSource,
-          filteredMeteringStations
+          filteredMeteringStations,
+          "meteringStation"
         );
-        addFeaturesToPointSource(pumpingStationSource, filteredPumpingStations);
-        addFeaturesToPointSource(productParkSource, filteredStorageTanks);
+        addFeaturesToPointSource(
+          pumpingStationSource,
+          filteredPumpingStations,
+          "pumpingStation"
+        );
+        addFeaturesToPointSource(
+          productParkSource,
+          filteredStorageTanks,
+          "productPark"
+        );
       } catch (error) {
         console.error("Ошибка при загрузке данных схемы:", error);
       }
@@ -110,10 +122,23 @@ export function useSchemeData({ selectedSchemeId }: FetchSchemeDataProp) {
     if (selectedSchemeId) {
       fetchSchemeData();
     }
-  }, [selectedSchemeId, pipes]);
+  }, [selectedSchemeId]);
+
+  useEffect(() => {
+    if (pipes.length > 0) {
+      pipeSource.clear();
+      dispatch(clearPipeSource());
+      const filteredPipes = pipes.filter((pipe: IPipe) => pipe.coordinates);
+      addFeaturesToLineSource(pipeSource, filteredPipes);
+    }
+  }, [pipes]);
 
   // Вспомогательная функция для добавления фич в источник
-  const addFeaturesToPointSource = (source: VectorSource, items: any[]) => {
+  const addFeaturesToPointSource = (
+    source: VectorSource,
+    items: any[],
+    type: string
+  ) => {
     if (!source) return;
 
     const viewProjection = map.getView().getProjection();
@@ -124,6 +149,7 @@ export function useSchemeData({ selectedSchemeId }: FetchSchemeDataProp) {
       const point = new Point(mapCoords);
       return new Feature({
         geometry: point,
+        type: type,
         ...item,
       });
     });
@@ -142,10 +168,8 @@ export function useSchemeData({ selectedSchemeId }: FetchSchemeDataProp) {
           console.warn("Pipe has insufficient coordinates:", item);
           return null;
         }
-
-        // Преобразуем все координаты из WGS84 в проекцию карты
         const lineCoords = item.coordinates.map((coord) => {
-          const wgs84Coords = [coord.latitude, coord.longitude]; // longitude first!
+          const wgs84Coords = [coord.latitude, coord.longitude];
           return transform(wgs84Coords, "EPSG:4326", viewProjection);
         });
 
@@ -155,8 +179,7 @@ export function useSchemeData({ selectedSchemeId }: FetchSchemeDataProp) {
           ...item,
         });
       })
-      .filter((feature) => feature !== null) as Feature[]; // Фильтруем null значения
-
+      .filter((feature) => feature !== null) as Feature[];
     source.addFeatures(features);
   };
 }

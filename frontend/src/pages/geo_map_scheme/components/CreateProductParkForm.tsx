@@ -1,7 +1,7 @@
 import { Button, Form, Input, Space } from "antd";
 import { FormInstance, useForm } from "antd/es/form/Form";
 import { useAppSelector } from "../../../hooks/redux";
-import { IStorageTank } from "../../../models/IStorageTank";
+import { IProductPark } from "../../../models/IStorageTank";
 
 export function CreateProductParkForm({
   form,
@@ -9,23 +9,23 @@ export function CreateProductParkForm({
   onCancel,
 }: {
   form: FormInstance;
-  onCreate: (productPark: IStorageTank) => void;
+  onCreate: (productPark: IProductPark) => void;
   onCancel: () => void;
 }) {
   const { selectedSchemeId } = useAppSelector((state) => state.scheme);
 
-  async function onSubmit(values: IStorageTank) {
+  async function onSubmit(values: IProductPark) {
     const productPark = {
       ...values,
       scheme_id: selectedSchemeId,
-    } as IStorageTank;
+    } as IProductPark;
     onCreate(productPark);
     form.resetFields();
   }
 
   return (
     <>
-      <Form form={form} onFinish={onSubmit}>
+      <Form form={form} onFinish={onSubmit} requiredMark="optional">
         <Form.Item
           name="name"
           label="Название"

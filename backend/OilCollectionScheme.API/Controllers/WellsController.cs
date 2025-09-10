@@ -27,10 +27,13 @@ namespace OilCollectionScheme.API.Controllers
                 new WellsResponse(
                     w.WellId, 
                     w.Name, 
-                    w.WellTypeId, 
+                    w.DriveTypeId, 
                     w.WellPumpId, 
                     w.LengthStroke, 
                     w.NumberSwings, 
+                    w.WaterCut,
+                    w.FlowRate,
+                    w.FlowRateOil,
                     w.Coordinate?.Longitude, 
                     w.Coordinate?.Latitude, 
                     w.SchemeId
@@ -49,7 +52,6 @@ namespace OilCollectionScheme.API.Controllers
                 return NotFound("Не найдена скважина с well_id=" + well_id);
             }
             return Ok(well);
-
         }
 
         [HttpPost]
@@ -59,9 +61,18 @@ namespace OilCollectionScheme.API.Controllers
             var coordinate = (request.longitude == null || request.latitude == null)
                 ? null
                 : GeoPoint.Create((double)request.longitude, (double)request.latitude);
-            var well = new Well(null, request.name, request.well_type_id, 
-                request.well_pump_id, request.length_stroke, request.number_swings, 
-                coordinate, request.scheme_id);
+            var well = new Well(
+                request.name,
+                request.drive_type_id,
+                request.well_pump_id,
+                request.length_stroke,
+                request.number_swings,
+                request.water_cut,
+                request.flow_rate,
+                request.flow_rate_oil,
+                coordinate,
+                request.scheme_id
+            );
 
             var wellId = await _wellService.CreateWell(well);
 
@@ -74,9 +85,19 @@ namespace OilCollectionScheme.API.Controllers
             var coordinate = (request.longitude == null || request.latitude == null)
                 ? null
                 : GeoPoint.Create((double)request.longitude, (double)request.latitude);
-            var well = new Well(well_id, request.name, request.well_type_id, 
-                request.well_pump_id, request.length_stroke, request.number_swings, 
-                coordinate, request.scheme_id);
+            var well = new Well(
+                well_id,
+                request.name,
+                request.drive_type_id,
+                request.well_pump_id,
+                request.length_stroke,
+                request.number_swings,
+                request.water_cut,
+                request.flow_rate,
+                request.flow_rate_oil,
+                coordinate,
+                request.scheme_id
+            );
 
             var wellId = await _wellService.UpdateWell(well_id, well);
 
@@ -90,22 +111,49 @@ namespace OilCollectionScheme.API.Controllers
             return well_id;
         }
 
+        [HttpGet("/LiftMethods")]
+        public async Task<ActionResult<Dictionary<string, List<LiftMethodsResponse>>>> GetLiftMethods()
+        {
+            var liftMethods = await _wellService.GetLiftMethods();
+            var liftMethodsResponse = liftMethods.Select((liftMethod) =>
+                new LiftMethodsResponse(
+                    liftMethod.LiftMethodId,
+                    liftMethod.Name
+                )
+            ).ToList();
+            var result = new Dictionary<string, List<LiftMethodsResponse>>() { ["lift_methods"] = liftMethodsResponse };
+
+            return Ok(result);
+        }
+
         [HttpGet("/WellPumps")]
         public async Task<ActionResult<Dictionary<string, List<WellPumpsResponse>>>> GetWellPumps()
         {
             var wellPumps = await _wellService.GetWellPumps();
-            var wellPumpsResponse = wellPumps.Select((wellPump) =>  new WellPumpsResponse(wellPump.WellPumpId, wellPump.Name)).ToList();
+            var wellPumpsResponse = wellPumps.Select((wellPump) => 
+                new WellPumpsResponse(
+                    wellPump.WellPumpId,
+                    wellPump.Name,
+                    wellPump.LiftMethodId
+                )
+            ).ToList();
             var result = new Dictionary<string, List<WellPumpsResponse>>() { ["well_pumps"] = wellPumpsResponse };
 
             return Ok(result);
         }
 
-        [HttpGet("/WellTypes")]
-        public async Task<ActionResult<Dictionary<string, List<WellTypesResponse>>>> GetWellTypes()
+        [HttpGet("/DriveTypes")]
+        public async Task<ActionResult<Dictionary<string, List<DriveTypesResponse>>>> GetDriveTypes()
         {
-            var wellTypes = await _wellService.GetWellTypes();
-            var wellTypesResponse = wellTypes.Select((wellType) => new WellTypesResponse(wellType.WellTypeId, wellType.Name)).ToList(); 
-            var result = new Dictionary<string, List<WellTypesResponse>>() { ["well_types"] = wellTypesResponse };
+            var driveTypes = await _wellService.GetDriveTypes();
+            var wellTypesResponse = driveTypes.Select((driveType) => 
+                new DriveTypesResponse(
+                    driveType.DriveTypeId,
+                    driveType.Name,
+                    driveType.LiftMethodId
+                )
+            ).ToList(); 
+            var result = new Dictionary<string, List<DriveTypesResponse>>() { ["drive_types"] = wellTypesResponse };
 
             return Ok(result);
         }

@@ -4,14 +4,17 @@ namespace OilCollectionScheme.API.Contracts
 {
     public record WellsResponse
     (
-        int? well_id,
+        int well_id,
         string name,
-        int? well_type_id,
+        int? drive_type_id,
         int well_pump_id,
-        float? LengthStroke,
-        float? NumberSwings,
-        double? Longitude,
-        double? Latitude,
+        float? length_stroke,
+        float? number_swings,
+        float water_cut,
+        float flow_rate,
+        float flow_rate_oil,
+        double? longitude,
+        double? latitude,
         int scheme_id
     );
 }

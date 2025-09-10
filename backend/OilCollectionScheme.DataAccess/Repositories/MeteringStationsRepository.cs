@@ -31,6 +31,9 @@ namespace OilCollectionScheme.DataAccess.Repositories
                 new MeteringStation(
                     mt.MeteringStationId,
                     mt.Name,
+                    mt.CycleTime,
+                    mt.Pressure,
+                    mt.FlowlineCount,
                     mt.MeteringStationTypeId,
                     mt.CounterTypeId,
                     CoordinateMapper.toGeoPoint(mt.Coordinate),
@@ -46,6 +49,9 @@ namespace OilCollectionScheme.DataAccess.Repositories
             var meteringStationEntity = new MeteringStationEntity
             {
                 Name = meteringStation.Name,
+                CycleTime = meteringStation.CycleTime,
+                Pressure = meteringStation.Pressure,
+                FlowlineCount = meteringStation.FlowlineCount,
                 MeteringStationTypeId = meteringStation.MeteringStationTypeId,
                 CounterTypeId = meteringStation.CounterTypeId,
                 Coordinate = ntsPoint,
@@ -63,6 +69,9 @@ namespace OilCollectionScheme.DataAccess.Repositories
                 .Where(ms => ms.MeteringStationId == meteringStation.MeteringStationId)
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(mt => mt.Name, meteringStation.Name)
+                    .SetProperty(mt => mt.CycleTime, meteringStation.CycleTime)
+                    .SetProperty(mt => mt.Pressure, meteringStation.Pressure)
+                    .SetProperty(mt => mt.FlowlineCount, meteringStation.FlowlineCount)
                     .SetProperty(mt => mt.CounterTypeId, meteringStation.CounterTypeId)
                     .SetProperty(mt => mt.Coordinate, ntsPoint)
                     .SetProperty(mt => mt.SchemeId, meteringStation.SchemeId)

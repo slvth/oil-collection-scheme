@@ -26,6 +26,10 @@ namespace OilCollectionScheme.API.Controllers
                 new PumpingStationsResponse(
                     pt.PumpingStationId,
                     pt.Name,
+                    pt.PressureWorking,
+                    pt.TankVolume,
+                    pt.Throughput,
+                    pt.PumpPerformance,
                     pt.Coordinate?.Longitude,
                     pt.Coordinate?.Latitude,
                     pt.SchemeId
@@ -45,6 +49,10 @@ namespace OilCollectionScheme.API.Controllers
             var pumpingStationId = await _pumpingStationsService.CreatePumpingStation(
                 new PumpingStation(
                     request.name,
+                    request.pressure_working,
+                    request.tank_volume,
+                    request.throughput,
+                    request.pump_performance,
                     coordinate,
                     request.scheme_id
                 )
@@ -62,6 +70,10 @@ namespace OilCollectionScheme.API.Controllers
                 new PumpingStation(
                     pumping_station_id,
                     request.name,
+                    request.pressure_working,
+                    request.tank_volume,
+                    request.throughput,
+                    request.pump_performance,
                     coordinate,
                     request.scheme_id
                 )

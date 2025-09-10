@@ -150,9 +150,9 @@ export const createPumpingStation = async ({
 //РВС
 export const getStorageTanks = async ({ scheme_id }: { scheme_id: number }) => {
   const response = await api.get(
-    `${baseUrl}/StorageTanks?scheme_id=` + scheme_id
+    `${baseUrl}/ProductParks?scheme_id=` + scheme_id
   );
-  return response.data.storage_tanks;
+  return response.data.product_parks;
 };
 
 export const createStorageTank = async ({

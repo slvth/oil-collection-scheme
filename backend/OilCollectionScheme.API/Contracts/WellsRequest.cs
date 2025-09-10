@@ -8,13 +8,16 @@ namespace OilCollectionScheme.API.Contracts
         [Required(ErrorMessage = "Укажите название (name)")]
         string name,
 
-        int? well_type_id,
+        int? drive_type_id,
 
         [Range(1, int.MaxValue, ErrorMessage = "well_pump_id должен быть > 0")]
         int well_pump_id,
 
         float? length_stroke,
         float? number_swings,
+        float water_cut,
+        float flow_rate,
+        float flow_rate_oil,
         double? longitude,
         double? latitude,
 

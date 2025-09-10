@@ -1,4 +1,4 @@
-import { Button, Form, Input, Select, Space } from "antd";
+import { Button, Form, Input, InputNumber, Select, Space } from "antd";
 import { FormInstance, useForm } from "antd/es/form/Form";
 import { useAppDispatch, useAppSelector } from "../../../hooks/redux";
 import { Point } from "ol/geom";
@@ -42,7 +42,7 @@ export function CreateWellForm({
       return;
     }
     const options = wellTypes.map((wellType) => ({
-      value: wellType.well_type_id,
+      value: wellType.drive_type_id,
       label: wellType.name,
     }));
     setWellTypeOptions(options);
@@ -60,14 +60,18 @@ export function CreateWellForm({
       );
       var well: IWell = {
         name: values.name,
+        drive_type_id: values.drive_type_id,
         well_pump_id: values.well_pump_id,
-        well_type_id: values.well_type_id,
-        scheme_id: selectedSchemeId!,
+        water_cut: values.water_cut,
+        flow_rate: values.flow_rate,
+        flow_rate_oil: values.flow_rate_oil,
         latitude: wgs84Coords[0],
         longitude: wgs84Coords[1],
+        scheme_id: selectedSchemeId!,
       };
       dispatch(CreateWell(well));
-      pendingFeature.setProperties({ name: well.name });
+      console.log({ ...well, type: "well" });
+      pendingFeature.setProperties({ ...well, type: "well" });
       setOpen(false);
       form.resetFields();
     }
@@ -75,13 +79,31 @@ export function CreateWellForm({
 
   return (
     <>
-      <Form form={form} onFinish={onSubmit}>
+      <Form
+        form={form}
+        onFinish={onSubmit}
+        labelCol={{ span: 9 }}
+        requiredMark="optional"
+      >
         <Form.Item
           name="name"
           label="Название"
           rules={[{ required: true, message: "Введите название" }]}
         >
           <Input />
+        </Form.Item>
+        <Form.Item
+          name="drive_type_id"
+          label="Тип привода"
+          rules={[{ required: true, message: "Выберите тип привода" }]}
+        >
+          <Select
+            showSearch
+            placeholder="Выберите тип привода"
+            optionFilterProp="label"
+            style={{ width: "100%" }}
+            options={wellTypeOptions}
+          />
         </Form.Item>
         <Form.Item
           name="well_pump_id"
@@ -97,16 +119,42 @@ export function CreateWellForm({
           />
         </Form.Item>
         <Form.Item
-          name="well_type_id"
-          label="Тип сважины"
-          rules={[{ required: true, message: "Выберите тип скважины" }]}
+          name="water_cut"
+          label="Обводненность"
+          rules={[{ required: true, message: "Введите обводненность" }]}
         >
-          <Select
-            showSearch
-            placeholder="Выберите тип скважины"
-            optionFilterProp="label"
+          <InputNumber
+            changeOnWheel
+            suffix="%"
+            min={0}
+            max={100}
             style={{ width: "100%" }}
-            options={wellTypeOptions}
+          />
+        </Form.Item>
+        <Form.Item
+          name="flow_rate"
+          label="Расход жидкости"
+          rules={[{ required: true, message: "Введите расход жидкости" }]}
+        >
+          <InputNumber
+            changeOnWheel
+            suffix="м³/ч"
+            min={0}
+            max={10000}
+            style={{ width: "100%" }}
+          />
+        </Form.Item>
+        <Form.Item
+          name="flow_rate_oil"
+          label="Расход нефти"
+          rules={[{ required: true, message: "Введите расход нефти" }]}
+        >
+          <InputNumber
+            changeOnWheel
+            suffix="м³/ч"
+            min={0}
+            max={10000}
+            style={{ width: "100%" }}
           />
         </Form.Item>
         <Form.Item style={{ marginBottom: 0 }}>

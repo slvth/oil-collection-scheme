@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../hooks/redux";
-import { IStorageTank } from "../../../models/IStorageTank";
+import { IProductPark } from "../../../models/IStorageTank";
 import { Point } from "ol/geom";
 import { transform } from "ol/proj";
 import {
@@ -39,11 +39,11 @@ export function StorageTankModal({ open, setOpen }: StorageTankModalProps) {
     if (productParks.length === 0) {
       return;
     }
-    const filtered: IStorageTank[] = productParks.filter(
+    const filtered: IProductPark[] = productParks.filter(
       (st) => !st.latitude && !st.longitude
     );
     const valueOptions = filtered.map((st) => ({
-      value: st.storage_tank_id,
+      value: st.product_park_id,
       label: st.name,
     }));
     setValueOptions(valueOptions);
@@ -65,7 +65,7 @@ export function StorageTankModal({ open, setOpen }: StorageTankModalProps) {
 
       dispatch(
         UpdateProductPark({
-          storage_tank_id: selectedId,
+          product_park_id: selectedId,
           latitude,
           longitude,
         })
@@ -74,7 +74,7 @@ export function StorageTankModal({ open, setOpen }: StorageTankModalProps) {
     }
   }
 
-  function onCreate(productPark: IStorageTank) {
+  function onCreate(productPark: IProductPark) {
     if (selectedSchemeId && pendingFeature) {
       const geometry = pendingFeature.getGeometry();
       const point = geometry as Point;

@@ -4,9 +4,9 @@ using NetTopologySuite.Geometries;
 
 namespace OilCollectionScheme.DataAccess.Entities;
 
-public partial class StorageTankEntity
+public partial class ProductParkEntity
 {
-    public int StorageTankId { get; set; }
+    public int ProductParkId { get; set; }
 
     public string Name { get; set; } = null!;
 

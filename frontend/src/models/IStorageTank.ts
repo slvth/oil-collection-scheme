@@ -1,5 +1,5 @@
-export interface IStorageTank {
-  storage_tank_id: number;
+export interface IProductPark {
+  product_park_id: number;
   name: string;
   longitude: number;
   latitude: number;

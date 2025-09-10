@@ -26,7 +26,7 @@ builder.Services.AddScoped<ISchemesService, SchemesService>();
 builder.Services.AddScoped<IWellsService, WellsService>();
 builder.Services.AddScoped<IMeteringStationsService, MeteringStationsService>();
 builder.Services.AddScoped<IPumpingStationsService, PumpingStationsService>();
-builder.Services.AddScoped<IStorageTanksService, StorageTanksService>();
+builder.Services.AddScoped<IProductParksService, StorageTanksService>();
 builder.Services.AddScoped<IPipesService, PipesService>();
 
 //Repositories
@@ -35,7 +35,7 @@ builder.Services.AddScoped<ISchemesRepository, SchemesRepository>();
 builder.Services.AddScoped<IWellsRepository, WellsRepository>();
 builder.Services.AddScoped<IMeteringStationsRepository, MeteringStationsRepository>();
 builder.Services.AddScoped<IPumpingStationsRepository, PumpingStationsRepository>();
-builder.Services.AddScoped<IStorageTanksRepository, StorageTanksRepository>();
+builder.Services.AddScoped<IProductParksRepository, ProductParksRepository>();
 builder.Services.AddScoped<IPipesRepository, PipesRepository>();
 
 builder.Services.AddCors(options =>

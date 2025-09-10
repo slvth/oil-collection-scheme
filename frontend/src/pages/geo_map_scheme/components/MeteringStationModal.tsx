@@ -88,8 +88,12 @@ export function MeteringStationModal({
 
       dispatch(GetPipes(selectedSchemeId!));
 
+      const meteringStation = meteringStations.find(
+        (ps) => ps.metering_station_id === selectedId
+      );
       pendingFeature.setProperties({
-        name: valueOptions.find((option) => option.value === selectedId)?.label,
+        ...meteringStation,
+        type: "meteringStation",
       });
 
       setOpen(false);
@@ -110,7 +114,11 @@ export function MeteringStationModal({
       meteringStation.longitude = wgs84Coords[1];
 
       dispatch(CreateMeteringStation(meteringStation));
-      pendingFeature.setProperties({ name: meteringStation.name });
+      // pendingFeature.setProperties({ name: meteringStation.name });
+      pendingFeature.setProperties({
+        ...meteringStation,
+        type: "meteringStation",
+      });
       setOpen(false);
     }
   }

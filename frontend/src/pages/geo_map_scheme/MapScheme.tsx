@@ -41,6 +41,8 @@ import { schemeSlice } from "../../store/reducers/SchemeSlice";
 import { MeteringStationModal } from "./components/MeteringStationModal";
 import { PumpingStationModal } from "./components/PumpingStationModal";
 import { StorageTankModal } from "./components/StorageTankModal";
+import { WellPopup } from "./components/WellPopup";
+import { usePopup } from "./hooks/usePopup";
 
 export default function MapScheme() {
   const { map, wellSource, selectedSchemeId } = useAppSelector(
@@ -70,6 +72,7 @@ export default function MapScheme() {
   });
 
   useSchemeData({ selectedSchemeId });
+  usePopup();
 
   return (
     <>
@@ -85,9 +88,10 @@ export default function MapScheme() {
               paddingTop: "10px",
             }}
           >
-            <div style={{ width: "250px" }}>
+            <Space style={{ width: "250px" }} direction="vertical">
               <MainPanel wellSource={wellSource} />
-            </div>
+              <WellPopup />
+            </Space>
           </div>
 
           <ObjectsFloatingButton
@@ -276,7 +280,7 @@ function ObjectsFloatingButton({
 //Главная панель
 //
 function MainPanel({ wellSource }: { wellSource: VectorSource }) {
-  const { selectedSchemeId } = useAppSelector((state) => state.scheme);
+  const { selectedSchemeId, map } = useAppSelector((state) => state.scheme);
   const dispatch = useAppDispatch();
   const [schemes, setSchemes] = useState<{ value: number; label: string }[]>(
     []
@@ -321,10 +325,7 @@ function MainPanel({ wellSource }: { wellSource: VectorSource }) {
 
   return (
     <>
-      <Space
-        style={{ width: "100%", marginLeft: 10, marginRight: 10 }}
-        direction="vertical"
-      >
+      <Space style={{ width: "100%" }} direction="vertical">
         <SelectAntd
           placeholder="Выберите схему..."
           value={selectedSchemeId || undefined}
@@ -366,7 +367,18 @@ function MainPanel({ wellSource }: { wellSource: VectorSource }) {
               icon={<DownloadOutlined />}
               onClick={() => {
                 const geo = new GeoJSON();
-                const geos = geo.writeFeatures(wellSource.getFeatures());
+
+                console.log(wellSource.getFeatures());
+                const transformedFeatures = wellSource
+                  .getFeatures()
+                  .map((feature) => {
+                    const featureClone = feature.clone();
+                    featureClone
+                      .getGeometry()!
+                      .transform(map.getView().getProjection(), "EPSG:4326");
+                    return featureClone;
+                  });
+                const geos = geo.writeFeatures(transformedFeatures);
                 // Create download link
                 const blob = new Blob([geos], { type: "application/json" });
                 const link = document.createElement("a");

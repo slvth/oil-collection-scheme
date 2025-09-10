@@ -10,6 +10,12 @@ public partial class MeteringStationEntity
 
     public string Name { get; set; } = null!;
 
+    public float CycleTime { get; set; }
+
+    public float Pressure { get; set; }
+
+    public int FlowlineCount { get; set; }
+
     public int MeteringStationTypeId { get; set; }
 
     public int CounterTypeId { get; set; }

@@ -25,8 +25,12 @@ namespace OilCollectionScheme.API.Controllers
             var response = meteringStations.Select(mt => 
                 new MeteringStationsResponse(
                     mt.MeteringStationId,
-                    mt.Name, mt.MeteringStationTypeId, 
+                    mt.Name,
+                    mt.CycleTime,
+                    mt.Pressure,
+                    mt.FlowlineCount,
                     mt.MeteringStationTypeId, 
+                    mt.CounterTypeId, 
                     mt.Coordinate?.Longitude, 
                     mt.Coordinate?.Latitude, 
                     mt.SchemeId
@@ -45,6 +49,9 @@ namespace OilCollectionScheme.API.Controllers
             var meteringStationId = await _meteringStationsService.CreateMeteringStation(
                 new MeteringStation(
                     request.name,
+                    request.cycle_time,
+                    request.pressure,
+                    request.flowline_count,
                     request.metering_station_type_id,
                     request.counter_type_id,
                     coordinate,
@@ -64,6 +71,9 @@ namespace OilCollectionScheme.API.Controllers
                 new MeteringStation(
                     metering_station_id,
                     request.name,
+                    request.cycle_time,
+                    request.pressure,
+                    request.flowline_count,
                     request.metering_station_type_id,
                     request.counter_type_id,
                     coordinate,
