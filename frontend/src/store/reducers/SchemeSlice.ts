@@ -371,6 +371,7 @@ const GetPipes = createAsyncThunk(
 );
 
 interface SchemeState {
+  isAuth: boolean;
   map: Map;
   pipeSource: VectorSource;
   wellSource: VectorSource;
@@ -398,6 +399,7 @@ const view = new View({
 });
 
 const initialState: SchemeState = {
+  isAuth: false,
   map: new Map({
     layers: [osmLayer],
     view: view,
@@ -425,6 +427,9 @@ export const schemeSlice = createSlice({
   name: "scheme",
   initialState,
   reducers: {
+    setIsAuth: (state, action: PayloadAction<boolean>) => {
+      state.isAuth = action.payload;
+    },
     setMapTarget: (state, action: PayloadAction<string>) => {
       state.map.setTarget(action.payload);
     },
@@ -528,6 +533,7 @@ export const schemeSlice = createSlice({
 });
 
 export const {
+  setIsAuth,
   setMapTarget,
   setPendingFeature,
   setSelectedSchemeId,

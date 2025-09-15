@@ -40,7 +40,7 @@ export function StorageTankModal({ open, setOpen }: StorageTankModalProps) {
       return;
     }
     const filtered: IProductPark[] = productParks.filter(
-      (st) => !st.latitude && !st.longitude
+      (st: IProductPark) => !st.latitude && !st.longitude
     );
     const valueOptions = filtered.map((st) => ({
       value: st.product_park_id,
