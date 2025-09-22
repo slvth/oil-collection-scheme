@@ -103,15 +103,6 @@ export default function MapScheme() {
             selectInteraction={selectInteraction}
           />
         </Col>
-        {/*
-          <Col span={5} style={{ paddingLeft: "10" }}>
-          <MainPanel
-            selectedSchemeId={selectedSchemeId}
-            setSelectedSchemeId={setSelectedSchemeId}
-            wellSource={wellSource}
-          />
-        </Col>
-          */}
 
         <WellModal
           open={wellFormOpen}

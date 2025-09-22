@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.11.35219.272
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11010.61 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OilCollectionScheme.API", "OilCollectionScheme.API.csproj", "{F646A216-3290-4CE5-A3A1-8A8511ADAF0A}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OilCollectionScheme.DataAccess", "..\OilCollectionScheme.DataAccess\OilCollectionScheme.DataAccess.csproj", "{6760679E-4E93-4B01-9518-DF1DEACDDE3D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OilCollectionScheme.Application", "..\OilCollectionScheme.Application\OilCollectionScheme.Application.csproj", "{FD67C5D1-31A0-416D-BF4C-B9670A76ECDC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OilCollectionScheme.Infrastructure", "..\OilCollectionScheme.Infrastructure\OilCollectionScheme.Infrastructure.csproj", "{03FC31E5-A755-426B-8C09-D282E4CB9D78}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{FD67C5D1-31A0-416D-BF4C-B9670A76ECDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD67C5D1-31A0-416D-BF4C-B9670A76ECDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD67C5D1-31A0-416D-BF4C-B9670A76ECDC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03FC31E5-A755-426B-8C09-D282E4CB9D78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03FC31E5-A755-426B-8C09-D282E4CB9D78}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03FC31E5-A755-426B-8C09-D282E4CB9D78}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03FC31E5-A755-426B-8C09-D282E4CB9D78}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

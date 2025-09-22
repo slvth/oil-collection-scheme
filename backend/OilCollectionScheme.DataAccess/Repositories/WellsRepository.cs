@@ -75,7 +75,7 @@ namespace OilCollectionScheme.DataAccess.Repositories
                 LengthStroke = well.LengthStroke,
                 NumberSwings = well.NumberSwings,
                 WaterCut = well.WaterCut,
-                FlowRate = well.FlowRateOil,
+                FlowRate = well.FlowRate,
                 FlowRateOil = well.FlowRateOil,
                 Coordinate = ntsPoint,
                 SchemeId = well.SchemeId

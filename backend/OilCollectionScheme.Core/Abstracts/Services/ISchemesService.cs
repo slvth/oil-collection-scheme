@@ -14,6 +14,7 @@ namespace OilCollectionScheme.Core.Abstracts.Services
         Task<int> CreateScheme(Scheme scheme);
         Task<int> UpdateScheme(int schemeId, string name, int departmentId, int userId);
         Task<int> DeleteScheme(int schemeId);
+        int ImportSchemeData(string schemeName, byte file);
 
     }
 }

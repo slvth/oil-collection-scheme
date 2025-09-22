@@ -42,5 +42,10 @@ namespace OilCollectionScheme.Application.Services
         {
             return await _schemesRepository.Update(schemeId, name, departmentId, userId);
         }
+
+        public int ImportSchemeData(string schemeName, byte file)
+        {
+            return  1;
+        }
     }
 }
