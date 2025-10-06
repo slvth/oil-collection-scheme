@@ -13,6 +13,7 @@ import { Content } from "antd/es/layout/layout";
 import { SelectInfo } from "antd/es/calendar/generateCalendar";
 import { TreeScheme } from "../tree_map_scheme/TreeScheme";
 import Tables from "../tables/Tables";
+import DegreeScheme from "../tree_map_scheme/DegreeScheme";
 
 export default function Main() {
   const [selectedKey, setSelectedKey] = useState("1");

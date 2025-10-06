@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   ReactFlow,
   applyNodeChanges,
@@ -7,6 +7,10 @@ import {
   Node,
   Edge,
   Position,
+  useReactFlow,
+  Panel,
+  ReactFlowProvider,
+  ReactFlowInstance,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
@@ -22,6 +26,7 @@ import {
   setSelectedSchemeId,
 } from "../../store/reducers/SchemeSlice";
 import { getSchemes } from "../../services/Scheme";
+import Dagre from "@dagrejs/dagre";
 
 const initialNodes = [
   { id: "n1", position: { x: 0, y: 0 }, data: { label: "Node 1" } },
@@ -31,10 +36,30 @@ const initialEdges = [{ id: "n1-n2", source: "n1", target: "n2" }];
 const nodeStyle = {
   width: 80,
 };
+enum DIRECTION {
+  vertical = "BT",
+  horizontal = "LR",
+}
 const nodeSettings = {
-  style: { width: 80 },
+  style: { width: 60, height: 25, fontSize: "12px", padding: "4px" },
   sourcePosition: Position.Right,
   targetPosition: Position.Left,
+};
+const getNodeSettings = (direct: string) => {
+  if (DIRECTION.horizontal === direct) {
+    return {
+      style: { width: 60, height: 25, fontSize: "12px", padding: "4px" },
+      sourcePosition: Position.Right,
+      targetPosition: Position.Left,
+    };
+  } else {
+    // BT (вертикальный)
+    return {
+      style: { width: 60, height: 25, fontSize: "12px", padding: "4px" },
+      sourcePosition: Position.Top,
+      targetPosition: Position.Bottom,
+    };
+  }
 };
 
 enum objectTypeForNode {
@@ -43,6 +68,12 @@ enum objectTypeForNode {
   PumpingStation = "ps_",
   ProductPark = "pp_",
 }
+
+type NodeData = {
+  label: string;
+};
+
+type LayoutNode = Node<NodeData>;
 
 export function TreeScheme() {
   const {
@@ -54,11 +85,28 @@ export function TreeScheme() {
     selectedSchemeId,
   } = useAppSelector((state) => state.scheme);
   const dispatch = useAppDispatch();
-  const [nodes, setNodes] = useState<Node[]>(initialNodes);
+  const [nodes, setNodes] = useState<LayoutNode[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [nodeSelectionIDs, setNodeSelectionIDs] = useState<string[]>([]);
   const [edgeSelectionIDs, setEdgeSelectionIDs] = useState<string[]>([]);
+  const [layoutDirection, setLayoutDirection] = useState<DIRECTION>(
+    DIRECTION.horizontal
+  );
+
+  const onLayout = useCallback(
+    (direction: DIRECTION) => {
+      console.log(nodes);
+      const layouted = getLayoutedElements(nodes, edges, { direction });
+      const updatedNodes = layouted.nodes.map((node) => ({
+        ...node,
+        ...getNodeSettings(direction),
+      }));
+      setNodes([...updatedNodes]);
+      setEdges([...layouted.edges]);
+    },
+    [nodes, edges, setNodes, setEdges]
+  );
 
   useEffect(() => {
     if (!selectedSchemeId) {
@@ -97,7 +145,7 @@ export function TreeScheme() {
   }, [selectedNodeId, edges]);
 
   useEffect(() => {
-    const wellNodes: Node[] =
+    const wellNodes =
       wells.length > 0
         ? wells.map((well, index) => ({
             id: objectTypeForNode.Well + well.well_id?.toString()!,
@@ -166,7 +214,7 @@ export function TreeScheme() {
             target:
               getObjectType(pipe.end_object_type_id) +
               pipe.end_object_id.toString(),
-            type: "smoothstep",
+            type: "default",
           }))
         : [];
     console.log([
@@ -245,28 +293,41 @@ export function TreeScheme() {
   return (
     <>
       <div style={{ position: "relative", height: "100%", width: "100%" }}>
-        <ReactFlow
-          style={{ width: "100%", height: "100%" }}
-          nodes={nodeWithSelection}
-          edges={edgeWithSelection}
-          onNodeClick={(_, node) => setSelectedNodeId(node.id)}
-          onPaneClick={() => setSelectedNodeId(null)}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-        />
-
-        <div
-          style={{
-            position: "absolute",
-            top: 10,
-            right: 10,
-            zIndex: 10,
-            width: 250,
-          }}
-        >
-          <MainPanel />
-        </div>
+        <ReactFlowProvider>
+          <ReactFlow
+            fitView
+            style={{ width: "100%", height: "100%" }}
+            nodes={nodeWithSelection}
+            edges={edgeWithSelection}
+            onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+            onPaneClick={() => setSelectedNodeId(null)}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+          />
+          <Panel position="top-right">
+            <div
+              style={{
+                top: 10,
+                right: 10,
+                zIndex: 10,
+                width: 250,
+              }}
+            >
+              <MainPanel />
+            </div>
+            <button onClick={() => onLayout(DIRECTION.vertical)}>
+              vertical layout
+            </button>
+            <button
+              onClick={() => {
+                onLayout(DIRECTION.horizontal);
+              }}
+            >
+              horizontal layout
+            </button>
+          </Panel>
+        </ReactFlowProvider>
       </div>
     </>
   );
@@ -327,6 +388,39 @@ function MainPanel() {
     </>
   );
 }
+
+const getLayoutedElements = (
+  nodes: LayoutNode[],
+  edges: Edge[],
+  options: any
+) => {
+  const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+  g.setGraph({ rankdir: options.direction, ranksep: 30, nodesep: 10 });
+
+  edges.forEach((edge: Edge) => g.setEdge(edge.source, edge.target));
+  nodes.forEach((node: LayoutNode) =>
+    g.setNode(node.id, {
+      ...node,
+      width: node.measured?.width ?? 0,
+      height: node.measured?.height ?? 0,
+    })
+  );
+
+  Dagre.layout(g);
+
+  return {
+    nodes: nodes.map((node: LayoutNode) => {
+      const position = g.node(node.id);
+      // We are shifting the dagre node position (anchor=center center) to the top left
+      // so it matches the React Flow node anchor point (top left).
+      const x = position.x - (node.measured?.width ?? 0) / 2;
+      const y = position.y - (node.measured?.height ?? 0) / 2;
+
+      return { ...node, position: { x, y } };
+    }),
+    edges,
+  };
+};
 
 // import { useState, useCallback, useEffect, useMemo } from "react";
 // import {

@@ -74,7 +74,7 @@ export function useInteractions() {
     });
 
     //map.addInteraction(selectInteraction.current);
-    map.addInteraction(modify);
+    //map.addInteraction(modify);
     map.addInteraction(snap);
 
     return () => {

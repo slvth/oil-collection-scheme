@@ -5,8 +5,8 @@ const baseUrl = "http://localhost:5059";
 const api = axios.create({ baseURL: baseUrl });
 
 export interface Scheme {
-  scheme_id?: number;
-  name?: string;
+  scheme_id: number;
+  name: string;
   department_id?: number;
   user_id?: number;
 }

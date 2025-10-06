@@ -87,7 +87,7 @@ namespace OilCollectionScheme.API.Controllers
 
         [ApiExplorerSettings(IgnoreApi = true)]
         [HttpPost("/Import")]
-        public async Task<ActionResult<string>> importSchemeData([FromForm(Name ="file")] IFormFile file)
+        public async Task<ActionResult<string>> importSchemeData([FromForm(Name ="file")] IFormFile file, [FromForm(Name = "scheme_name")] string scheme_name)
         {
             var fileName = file.FileName;
 
@@ -95,11 +95,8 @@ namespace OilCollectionScheme.API.Controllers
             await file.CopyToAsync(memoryStream);
             var workbook = new XLWorkbook(memoryStream);
             var random = new Random();
-            //var scheme = Scheme.Create(null, "Схема " + random.Next(100), 1, 1).Scheme;
-            //var schemeId = await _schemesService.CreateScheme(scheme);
-            var schemeId = 4;
-            //var headerRow = pumpingWorksheet.Row(2);
-            //var columnMapping = new Dictionary<string, int>();
+            var scheme = Scheme.Create(null, scheme_name, 1, 1).Scheme;
+            var schemeId = await _schemesService.CreateScheme(scheme);
             var pumpingWorksheet = workbook.Worksheet("База ДНС");
             var pumpingDictionary = new Dictionary<string, int>();
             foreach (var row in pumpingWorksheet.RowsUsed().Skip(2))
@@ -153,7 +150,6 @@ namespace OilCollectionScheme.API.Controllers
                     schemeId);
                 var meteringStationId = await _meteringStationsService.CreateMeteringStation(meteringStation);
                 meteringDictionary.Add(name, meteringStationId);
-                Console.WriteLine(name + " ----- " + meteringStationId);
             }
 
             var wellWorksheet = workbook.Worksheet("База скважин");
@@ -269,9 +265,121 @@ namespace OilCollectionScheme.API.Controllers
             Console.WriteLine("\npumpingDictionary " + pumpingDictionary.Count);
             Console.WriteLine("\nmeteringDictionary " + meteringDictionary.Count);
             Console.WriteLine("\nwellDictionary " + wellDictionary.Count);
-            Console.WriteLine("\npipeDictionary " + pipeDictionary.Count);
+            Console.WriteLine("\npipeDictionary\n" + pipeDictionary.Count);
 
             return Ok(fileName);
+        }
+
+
+        [HttpGet("/SchemeData")]
+        public async Task<ActionResult<List<Node>>> getSchemeData([FromQuery] int scheme_id)
+        {
+            var wells = await _wellsService.GetAllWellsBySchemeId(scheme_id);
+            var meteringStations = await _meteringStationsService.GetAllMeteringStationsBySchemeId(scheme_id);
+            var pumpingStations = await _pumpingStationsService.GetAllPumpingStationBySchemeId(scheme_id);
+            var productParks = await _productParksService.GetAllProductParksBySchemeId(scheme_id);
+            var pipes = await _pipesService.GetAllPipesBySchemeId(scheme_id);
+
+            var wellObjectTypeId = 1;
+            var meteringObjectTypeId = 2;
+            var pumpingObjectTypeId = 3;
+            var productParkObjectTypeId = 4;
+
+            var dictionary = new List<Node>();
+            //foreach (var productPark in productParks)
+            //{
+            //    var levelFirst = pipes.FindAll((pipe) => 
+            //        pipe.EndObjectTypeId == productParkObjectTypeId && 
+            //        pipe.EndObjectId == productPark.ProductParkId);
+
+            //    var levelFirstNames = new List<string>();
+            //    var levelFirstNodes = new List<Node>();
+
+            //    foreach(var item in levelFirst)
+            //    {
+            //        var itemType = item.StartObjectTypeId;
+            //        var itemName = "";
+            //        switch (itemType)
+            //        {
+            //            case 1:
+            //                itemName = wells.Find((well) => well.WellId == item.StartObjectId)!.Name;
+            //                break;
+            //            case 2:
+            //                itemName = meteringStations.Find((ms) => ms.MeteringStationId == item.StartObjectId)!.Name;
+            //                break;
+            //            case 3:
+            //                itemName = pumpingStations.Find((ps) => ps.PumpingStationId == item.StartObjectId)!.Name;
+            //                break;
+            //        }
+
+
+            //        var node = new Node(Guid.NewGuid(), itemName, itemType);
+            //        levelFirstNames.Add(itemName);
+            //        levelFirstNodes.Add(node);
+            //    }
+            //    dictionary.Add(productPark.Name, levelFirstNames);
+
+            //    var levelSecond = pipes.FindAll((pipe)=>
+            //        pipe.EndObjectTypeId == productParkObjectTypeId &&
+            //        pipe.EndObjectId == productPark.ProductParkId
+            //        );
+
+            //    //var levelThird = 
+            //}
+            //var dict = dictionary;
+
+            var objectNodes = new Dictionary<string, Node>();
+            foreach (var well in wells) 
+            {
+                var key = (well.WellId, wellObjectTypeId).ToString();  
+                objectNodes[key] = new Node(
+                    well.Name, 
+                    well.WellId, 
+                    wellObjectTypeId);
+            }
+            foreach (var metering in meteringStations)
+            {
+                var key = (metering.MeteringStationId, meteringObjectTypeId).ToString();
+                objectNodes[key] = new Node(
+                    metering.Name, 
+                    metering.MeteringStationId, 
+                    meteringObjectTypeId);
+            }
+            foreach (var pumping in pumpingStations)
+            {
+                var key = (pumping.PumpingStationId, pumpingObjectTypeId).ToString();
+                objectNodes[key] = new Node(
+                    pumping.Name, 
+                    pumping.PumpingStationId, 
+                    pumpingObjectTypeId);
+            }
+            foreach (var productPark in productParks)
+            {
+                var key = (productPark.ProductParkId, productParkObjectTypeId).ToString();
+                objectNodes[key] = new Node(
+                    productPark.Name, 
+                    productPark.ProductParkId, 
+                    productParkObjectTypeId);
+            }
+
+            foreach (var pipe in pipes)
+            {
+                var startKey = (pipe.StartObjectId, pipe.StartObjectTypeId).ToString();
+                var endKey = (pipe.EndObjectId,  pipe.EndObjectTypeId).ToString();
+                if (objectNodes.ContainsKey(startKey) && objectNodes.ContainsKey(endKey))
+                {
+                    var childNode = objectNodes[startKey];
+                    objectNodes[endKey].AddChildren(childNode);
+                }
+            }
+
+            var endObjects = pipes.Select((p) => (p.StartObjectId, p.StartObjectTypeId)).ToHashSet();
+            var rootNodes = objectNodes
+                    .Values
+                    .Where(node => !endObjects.Contains((node.ObjectId, node.ObjectTypeId)))
+                    .ToList();
+
+            return Ok(rootNodes);
         }
     }
 }

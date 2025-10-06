@@ -133,7 +133,7 @@ export function CreateWellForm({
         </Form.Item>
         <Form.Item
           name="flow_rate"
-          label="Расход жидкости"
+          label="Дебит жидкости"
           rules={[{ required: true, message: "Введите расход жидкости" }]}
         >
           <InputNumber
@@ -146,7 +146,7 @@ export function CreateWellForm({
         </Form.Item>
         <Form.Item
           name="flow_rate_oil"
-          label="Расход нефти"
+          label="Дебит нефти"
           rules={[{ required: true, message: "Введите расход нефти" }]}
         >
           <InputNumber

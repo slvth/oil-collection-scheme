@@ -18,6 +18,17 @@ import { IWellPump } from "../../models/IWellPump";
 import { IDriveType } from "../../models/IWellType";
 import { IMeteringStationType } from "../../models/IMeteringStationType";
 import { ICounterType } from "../../models/ICounterType";
+import { getSchemes, Scheme } from "../../services/Scheme";
+
+const GetSchemes = createAsyncThunk("schemes/get", async (_, thunkAPI) => {
+  try {
+    const response = await getSchemes();
+    console.log(response);
+    return response;
+  } catch (error) {
+    thunkAPI.rejectWithValue("Ошибка при получении скважин. Ошибка: " + error);
+  }
+});
 
 //Wells
 const CreateWell = createAsyncThunk(
@@ -378,6 +389,7 @@ interface SchemeState {
   meteringStationSource: VectorSource;
   pumpingStationSource: VectorSource;
   productParkSource: VectorSource;
+  schemes: Scheme[];
   wells: IWell[];
   wellPumps: IWellPump[];
   wellTypes: IDriveType[];
@@ -409,6 +421,7 @@ const initialState: SchemeState = {
   meteringStationSource: new VectorSource(),
   pumpingStationSource: new VectorSource(),
   productParkSource: new VectorSource(),
+  schemes: [],
   wells: [],
   wellPumps: [],
   wellTypes: [],
@@ -464,6 +477,10 @@ export const schemeSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    builder.addCase(GetSchemes.fulfilled, (state, action) => {
+      console.log(action.payload);
+      state.schemes = action.payload;
+    });
     builder.addCase(CreateWell.fulfilled, (state, action) => {
       state.wells.push(action.payload);
     });
@@ -543,6 +560,7 @@ export const {
   setPopupText,
 } = schemeSlice.actions;
 export {
+  GetSchemes,
   GetWells,
   CreateWell,
   UpdateWell,

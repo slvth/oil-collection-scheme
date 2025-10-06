@@ -1,11 +1,14 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Button,
   Col,
+  Divider,
   Grid,
+  Input,
   message,
   Row,
   Segmented,
+  Select,
   Space,
   Switch,
   Table,
@@ -14,6 +17,13 @@ import {
 import type { TableProps } from "antd";
 import Upload from "antd/es/upload/Upload";
 import { UploadOutlined } from "@ant-design/icons";
+import { ImportSchemeModal } from "./components/ImportSchemeModal";
+import {
+  GetSchemes,
+  setSelectedSchemeId,
+} from "../../store/reducers/SchemeSlice";
+import { getSchemes, Scheme } from "../../services/Scheme";
+import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 
 interface OilCollectionRecord {
   id: number;
@@ -282,10 +292,29 @@ const addRowSpans = (data: OilCollectionRecord[]) => {
 };
 
 const OilCollectionTable: React.FC = () => {
+  const { selectedSchemeId } = useAppSelector((state) => state.scheme);
+  const dispatch = useAppDispatch();
+  const [open, setOpen] = useState(false);
   const [fixed, setFixed] = React.useState(true);
   const [bordered, setBordered] = React.useState(true);
   const [expanded, setExpanded] = React.useState(false);
   const [empty, setEmpty] = React.useState(false);
+
+  useEffect(() => {
+    if (selectedSchemeId) {
+      setEmpty(false);
+    } else {
+      setEmpty(true);
+    }
+  }, [selectedSchemeId]);
+
+  useEffect(() => {
+    dispatch(GetSchemes());
+  }, []);
+
+  useEffect(() => {
+    if (selectedSchemeId) dispatch(setSelectedSchemeId(null));
+  }, []);
 
   const tblRef: Parameters<typeof Table>[0]["ref"] = React.useRef(null);
 
@@ -327,32 +356,33 @@ const OilCollectionTable: React.FC = () => {
     };
   }, [expanded]);
 
-  return (
-    <Row>
-      <Col style={{ paddingInline: 20 }}>
-        <Space direction="vertical" style={{ width: "100%" }}>
-          <Upload
-            name="file"
-            action="http://localhost:5059/Import"
-            headers={{
-              authorization: "authorization-text",
-            }}
-            accept=".xlsx"
-            onChange={(info) => {
-              if (info.file.status !== "uploading") {
-                console.log(info.file, info.fileList);
-              }
-              if (info.file.status === "done") {
-                message.success(`${info.file.name} file uploaded successfully`);
-              } else if (info.file.status === "error") {
-                message.error(`${info.file.name} file upload failed.`);
-              }
-            }}
-          >
-            <Button icon={<UploadOutlined />}>Импорт данных</Button>
-          </Upload>
+  function OnCancel() {
+    dispatch(GetSchemes());
+    setOpen(false);
+  }
 
-          {/* <Space>
+  return (
+    <>
+      <Row>
+        <Col style={{ paddingInline: 20 }}>
+          <Space direction="vertical" style={{ width: "100%" }}>
+            <Space
+              direction="horizontal"
+              style={{ width: "100%", justifyContent: "space-between" }}
+            >
+              <Button
+                icon={<UploadOutlined />}
+                onClick={() => {
+                  setOpen(true);
+                }}
+              >
+                Импорт схемы
+              </Button>
+
+              <MainPanel />
+            </Space>
+
+            {/* <Space>
           <Switch
             checked={bordered}
             onChange={() => setBordered(!bordered)}
@@ -378,40 +408,94 @@ const OilCollectionTable: React.FC = () => {
             unCheckedChildren="Пусто"
           />
         </Space> */}
-          <Table<OilCollectionRecord>
-            size="small"
-            bordered={bordered}
-            virtual
-            columns={mergedColumns}
-            scroll={{ x: 800, y: 600 }}
-            rowKey="id"
-            dataSource={empty ? [] : processedData}
-            pagination={false}
-            ref={tblRef}
-            // rowSelection={
-            //   expanded ? undefined : { type: "checkbox", columnWidth: 48 }
-            // }
-            expandable={expandableProps}
-            summary={() => (
-              <Table.Summary>
-                <Table.Summary.Row>
-                  <Table.Summary.Cell index={0} colSpan={2}>
-                    <strong>Итого скважин:</strong>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={1}>
-                    <strong>{processedData.length}</strong>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={2} colSpan={3}>
-                    <strong>Система сбора нефти</strong>
-                  </Table.Summary.Cell>
-                </Table.Summary.Row>
-              </Table.Summary>
-            )}
-          />
-        </Space>
-      </Col>
-    </Row>
+            <Table<OilCollectionRecord>
+              size="small"
+              bordered={bordered}
+              virtual
+              columns={mergedColumns}
+              scroll={{ x: 800, y: 600 }}
+              rowKey="id"
+              dataSource={empty ? [] : processedData}
+              pagination={false}
+              ref={tblRef}
+              // rowSelection={
+              //   expanded ? undefined : { type: "checkbox", columnWidth: 48 }
+              // }
+              expandable={expandableProps}
+              // summary={() => (
+              //   <Table.Summary>
+              //     <Table.Summary.Row>
+              //       <Table.Summary.Cell index={0} colSpan={2}>
+              //         <strong>Итого скважин:</strong>
+              //       </Table.Summary.Cell>
+              //       <Table.Summary.Cell index={1}>
+              //         <strong>{processedData.length}</strong>
+              //       </Table.Summary.Cell>
+              //       <Table.Summary.Cell index={2} colSpan={3}>
+              //         <strong>Система сбора нефти</strong>
+              //       </Table.Summary.Cell>
+              //     </Table.Summary.Row>
+              //   </Table.Summary>
+              // )}
+            />
+          </Space>
+        </Col>
+      </Row>
+      <ImportSchemeModal open={open} onCancel={OnCancel} />
+    </>
   );
 };
 
 export default OilCollectionTable;
+
+function MainPanel() {
+  const { selectedSchemeId, schemes } = useAppSelector((state) => state.scheme);
+  const dispatch = useAppDispatch();
+  const [schemeValues, setSchemeValues] = useState<
+    { value: number; label: string }[]
+  >([]);
+
+  //Запросы на WebAPI
+  useEffect(() => {
+    const getSch = async () => {
+      if (schemes.length > 0) {
+        const schemesOptions = schemes.map((scheme: Scheme) => ({
+          value: scheme.scheme_id,
+          label: scheme.name,
+        }));
+        setSchemeValues(schemesOptions);
+        // if (!selectedSchemeId && schemesOptions.length > 0) {
+        //   //setSelectedSchemeId(schemesOptions[0].value);
+        //   dispatch(setSelectedSchemeId(schemesOptions[0].value));
+        // }
+      }
+    };
+    getSch();
+  }, [schemes]);
+
+  return (
+    <>
+      <Space style={{ width: "100%", marginLeft: 10, marginRight: 10 }}>
+        <Select
+          style={{ width: "250px" }}
+          placeholder="Выберите схему..."
+          value={selectedSchemeId}
+          options={schemeValues}
+          onChange={(value, option) => {
+            console.log(value);
+            dispatch(setSelectedSchemeId(value));
+          }}
+          dropdownRender={(menu) => (
+            <>
+              <div style={{ padding: "8px 12px", fontWeight: "bold" }}>
+                Схема Сбора
+              </div>
+              <Divider style={{ margin: "4px 0" }} />
+              {menu}
+            </>
+          )}
+        />
+      </Space>
+    </>
+  );
+}
